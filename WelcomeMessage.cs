@@ -29,7 +29,7 @@ namespace borkbot
             }
         }
 
-        public string Response(SocketUserMessage u)
+        public string Response(SocketGuildUser u)
         {
             return String.Join(String.Empty,content.Select(x => x.getString(u)));
         }
@@ -42,14 +42,14 @@ namespace borkbot
 
     interface WelcomeMessageContent
     {
-        string getString(UserEventArgs u);
+        string getString(SocketGuildUser u);
         string getRawString();
     }
 
     class WelcomeMessageId : WelcomeMessageContent
     {
         public static string raw = "{user}";
-        public string getString(UserEventArgs u) { return u.User.Mention; }
+        public string getString(SocketGuildUser u) { return u.Mention; }
         public string getRawString() { return raw; }
     }
 
@@ -57,14 +57,14 @@ namespace borkbot
     {
         private String str;
         public WelcomeMessageString(String _str) { str = _str; }
-        public string getString(UserEventArgs u) { return str;  }
+        public string getString(SocketGuildUser u) { return str;  }
         public string getRawString() { return str; }
     }
 
     class WelcomeMessageName : WelcomeMessageContent
     {
         public static string raw = "{username}";
-        public string getString(UserEventArgs u) { return u.User.Name; }
+        public string getString(SocketGuildUser u) { return u.Username; }
         public string getRawString() { return raw; }
     }
 

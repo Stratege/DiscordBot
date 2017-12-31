@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
-using Discord;
+using Discord.WebSocket;
 
 namespace borkbot
 {
@@ -42,11 +42,14 @@ reminder change msg <name> <msg>")));
             var chan = server.getServer().GetChannel(obj.channelid);
             if (chan == null)
                 return;
-            var msg = chan.Messages.FirstOrDefault();
-            Console.WriteLine(msg.User+" with "+ msg.Text);
-            if (msg != null && msg.IsAuthor)
+            SocketTextChannel stc = chan as SocketTextChannel;
+            if (stc != null)
                 return;
-            server.safeSendMessage(chan, obj.msg);
+            var msg = stc.CachedMessages.FirstOrDefault();
+            Console.WriteLine(msg.Author+" with "+ msg.Content);
+            if (msg != null && msg.Source == Discord.MessageSource.Bot)
+                return;
+            server.safeSendMessage(stc, obj.msg);
         }
 
         private void reschedule(ReminderObj obj)
@@ -77,9 +80,9 @@ reminder change msg <name> <msg>")));
             }
         }
 
-        private void addfunc(SocketUserMessage arg1, String name, String channelname, String frequency, String msg)
+        private void addfunc(ServerMessage arg1, String name, String channelname, String frequency, String msg)
         {
-            var channel = server.getServer().FindChannels(channelname, null, true).FirstOrDefault();
+            var channel = server.getServer().TextChannels.Where(chn => chn.Name == channelname).FirstOrDefault();
             if (reminderlist != null && reminderlist.Any(x => x.name == name))
             {
                 server.safeSendMessage(arg1.Channel, "error: name already exists");
@@ -134,7 +137,7 @@ reminder change msg <name> <msg>")));
         }
         
 
-        private void deletefunc(SocketUserMessage arg1, String name)
+        private void deletefunc(ServerMessage arg1, String name)
         {
             var ls = reminderlist;
             LinkedList<ReminderObj> prev = null;
@@ -158,7 +161,7 @@ reminder change msg <name> <msg>")));
             server.safeSendMessage(arg1.Channel, "deleted " + ls.obj.name + " with interval of " + ls.obj.freq + " minutes and message: \n" + ls.obj.msg);
         }
 
-        private void changefunc(SocketUserMessage arg1, string type, string name, string content)
+        private void changefunc(ServerMessage arg1, string type, string name, string content)
         {
             if(type != "channel" && type != "frequency" && type != "msg")
             {
@@ -180,7 +183,7 @@ reminder change msg <name> <msg>")));
             var obj = ls.obj;
             if (type == "channel")
             {
-                var channel = server.getServer().FindChannels(content, null, true).FirstOrDefault();
+                var channel = server.getServer().TextChannels.Where(chn => chn.Name == content).FirstOrDefault();
                 if (channel == null)
                 {
                     server.safeSendMessage(arg1.Channel, "error: no such channel");
@@ -215,7 +218,7 @@ reminder change msg <name> <msg>")));
             server.safeSendMessage(arg1.Channel,"Successfully changed " + obj.name);
         }
 
-        private void reminderfunc(SocketUserMessage arg1, string msg)
+        private void reminderfunc(ServerMessage arg1, string msg)
         {
             var xs = msg.Split(" ".ToCharArray(), 5, StringSplitOptions.RemoveEmptyEntries);
             if(xs.Length == 0)

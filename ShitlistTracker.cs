@@ -20,7 +20,7 @@ namespace borkbot
             return ret;
         }
 
-        void shitlist(SocketUserMessage e, String m)
+        void shitlist(ServerMessage e, String m)
         {
             
         }

@@ -31,7 +31,7 @@ namespace borkbot
 
         
 
-        private void enableroll(SocketUserMessage e, string m)
+        private void enableroll(ServerMessage e, string m)
         {
             if (m == "on")
             {

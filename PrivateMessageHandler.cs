@@ -51,10 +51,13 @@ namespace borkbot
                     VirtualServer curServ;
                     if (servers.TryGetValue(serverId, out curServ))
                     {
-                        if (curServ.getServer().Users.FirstOrDefault(z => z.Id == e.Author.Id) != null)
+                        var user = curServ.getServer().Users.FirstOrDefault(z => z.Id == e.Author.Id);
+                        if (user != null)
                         {
                             Console.WriteLine("accepting PM");
-                            curServ.messageRecieved(e);
+                            var convertedMsg = new ServerMessage(curServ.getServer(), true, e.Channel, e, user);
+
+                            curServ.messageRecieved(convertedMsg);
                             return;
                         }
                         else

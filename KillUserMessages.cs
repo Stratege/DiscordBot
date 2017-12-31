@@ -20,35 +20,35 @@ namespace borkbot
             return xs;
         }
 
-        private void kill(SocketUserMessage e, string m)
+        private void kill(ServerMessage e, string m)
         {
             if (!on)
                 return;
-            var now = e.Message.Timestamp;
+            var now = e.msg.Timestamp;
             var fifteenMins = new TimeSpan(0, 15, 0);
             try
             {
                 if (Funcs.validateMentionTarget(e, m))
                 {
-                    foreach (var c in e.Server.AllChannels)
+                    foreach (var c in e.Server.TextChannels)
                     {
                         List<ulong> messagesToDelete = new List<ulong>();
                         Console.Write(1);
-                        foreach (var mes in c.Messages.Reverse())
+                        foreach (var mes in c.CachedMessages.Reverse())
                         {
                             Console.Write(2);
                             if (now.Subtract(mes.Timestamp).CompareTo(fifteenMins) >= 0)
                             {
                                 break;
                             }
-                            if (mes.User.Mention == m || mes.User.NicknameMention == m)
+                            if (mes.Author.Mention == m /* || mes.User.NicknameMention == m */)
                             {
-                                Console.WriteLine("found message: " + mes.Text);
+                                Console.WriteLine("found message: " + mes.Content);
                                 messagesToDelete.Add(mes.Id);
                             }
                         }
                         if (messagesToDelete.Count > 0)
-                            c.DeleteMessages(messagesToDelete.ToArray());
+                            c.DeleteMessagesAsync(messagesToDelete.ToArray());
                     }
                 }
                 else

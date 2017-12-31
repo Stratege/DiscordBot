@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Discord.WebSocket;
 using Discord;
-
 
 namespace borkbot
 {
@@ -33,29 +33,39 @@ namespace borkbot
             server.MessageRecieved += (s, e) =>
             {
                 List<String> localborklist;
-                if (borklist.TryGetValue(e.User.Id, out localborklist))
+                if (borklist.TryGetValue(e.Author.Id, out localborklist))
                 {
                     ObjWrapper<int> count;
-                    if (!lastBorks.TryGetValue(e.User.Id, out count))
+                    if (!lastBorks.TryGetValue(e.Author.Id, out count))
                     {
                         count = new ObjWrapper<int>(frequency);
-                        lastBorks.Add(e.User.Id, count);
+                        lastBorks.Add(e.Author.Id, count);
                     }
                     count.Item1 = count.Item1 + 1;
                     if (count.Item1 >= frequency)
                     {
                         foreach (var y in localborklist)
                         {
-                            try
+//                            try
+//                            {
+
+                            //Todo: Rewrite this so that non-server emotes work as well!
+                            IEmote emote = server.getServer().Emotes.Where(x => { Console.WriteLine("Emote: " + x + " has Name " + x.Name + " and Url " + x.Url); return x.Name == y; }).FirstOrDefault();
+                            if (emote != null)
+                                e.msg.AddReactionAsync(emote);
+                            else
                             {
-                                //bit of a hack to send a special msg
-                                var x = server.getServer().Client.ClientAPI.Send(new EmojiAddRequest(e.Channel.Id, e.Message.Id, y));
-                                x.Wait();
+                                Console.WriteLine("could not find emote: " + y);
                             }
+                                    //bit of a hack to send a special msg
+                                    /*                                var x = server.getServer().Client.ClientAPI.Send(new EmojiAddRequest(e.Channel.Id, e.Message.Id, y));
+                                                                    x.Wait();
+                                    */
+/*                                }
                             catch (Exception exception)
                             {
                                 Console.WriteLine(exception);
-                            }
+                            }*/
                         }
                         count.Item1 = 0;
                     }
@@ -72,7 +82,7 @@ namespace borkbot
             return commands;
         }
 
-        void bork(SocketUserMessage e, String m)
+        void bork(ServerMessage e, String m)
         {
             var split = m.Split(" ".ToCharArray());
             string message = "Unable to comply with command. \n\n bork <mention-target> <emoticon> <on/off>";
@@ -83,7 +93,7 @@ namespace borkbot
                     string emoji = server.toEmojiString(e, split[1]);
                     if (emoji != null)
                     {
-                        ulong userId = e.Server.Users.First(x => x.Mention == split[0] || x.NicknameMention == split[0] || x.Name == split[0] || x.Nickname == split[0]).Id;
+                        ulong userId = e.Server.Users.First(x => x.Mention == split[0] /*|| x.NicknameMention == split[0]*/ || x.Username == split[0] || x.Nickname == split[0]).Id;
                         if (userId == 0)
                         {
                             message = "Could not find user: " + m;
@@ -134,7 +144,7 @@ namespace borkbot
             server.safeSendMessage(e.Channel,message);
         }
 
-        void getborks(SocketUserMessage e, String m)
+        void getborks(ServerMessage e, String m)
         {
             String message = "Currently borking at:";
             foreach (var x in borklist)
@@ -143,7 +153,7 @@ namespace borkbot
                 var u = server.getServer().GetUser(x.Key);
                 if (u != null)
                 {
-                    message += u.Name;
+                    message += u.Username;
                 }
                 else
                 {
@@ -158,7 +168,7 @@ namespace borkbot
             server.safeSendMessage(e.Channel,message);
         }
 
-        void setborkfrequency(SocketUserMessage e, String m)
+        void setborkfrequency(ServerMessage e, String m)
         {
             int x;
             String message;

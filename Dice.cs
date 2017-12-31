@@ -22,7 +22,7 @@ namespace borkbot
             return cmd;
         }
 
-        private void roll(SocketUserMessage e, string m)
+        private void roll(ServerMessage e, string m)
         {
             if (on)
             {

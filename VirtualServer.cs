@@ -10,14 +10,23 @@ using System.Threading;
 
 namespace borkbot
 {
-    class ServerMessage
+    public class ServerMessage
     {
-        public SocketGuild server;
+        public SocketGuild Server;
         public bool isDM;
-        public SocketGuildChannel guildchan;
-        public SocketDMChannel dmchan;
+        public ISocketMessageChannel Channel; //guild text channel or DM channel
         public SocketUserMessage msg;
+        public SocketGuildUser Author;
+        public ServerMessage(SocketGuild _Server, bool _isDM, ISocketMessageChannel _Channel, SocketUserMessage _msg, SocketGuildUser _Author)
+        {
+            Server = _Server;
+            isDM = _isDM;
+            Channel = _Channel;
+            msg = _msg;
+            Author = _Author;
+        }
     }
+
 
     class VirtualServer
     {
@@ -96,7 +105,7 @@ namespace borkbot
                         }
                     });
                 };*/
-                Action<SocketUserMessage, string> h = (x, y) =>
+                Action<ServerMessage, string> h = (x, y) =>
                 {
                     String[] split = y.Split(new String[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
                     Console.WriteLine("invoking " + split.Length + " commands");
@@ -132,7 +141,7 @@ namespace borkbot
             server = newS;
         }
 
-        void addBotAdmin(SocketUserMessage e, String m)
+        void addBotAdmin(ServerMessage e, String m)
         {
             adminAbstract(e, m, (mention, id, user) => {
                 if (Admins.Contains(id.ToString()))
@@ -149,7 +158,7 @@ namespace borkbot
             });
         }
 
-        void removeBotAdmin(SocketUserMessage e, String m)
+        void removeBotAdmin(ServerMessage e, String m)
         {
             adminAbstract(e, m, (mention, id, user) =>
             {
@@ -164,9 +173,9 @@ namespace borkbot
             });
         }
 
-        void adminAbstract(SocketUserMessage e, String m, Func<String, ulong, SocketUser, String> f)
+        void adminAbstract(ServerMessage e, String m, Func<String, ulong, SocketUser, String> f)
         {
-            var users = e.MentionedUsers.Where(x => !x.IsBot).Select(x => Tuple.Create(x.Mention, x.Id, x)).ToList();
+            var users = e.msg.MentionedUsers.Where(x => !x.IsBot).Select(x => Tuple.Create(x.Mention, x.Id, x)).ToList();
             var message = "";
             if (!Funcs.validateMentionTarget(e, m))
                 message = "Unable to comply with command. \n\n" + botInfo;
@@ -201,9 +210,9 @@ namespace borkbot
 
         bool isShutdown = false;
         internal EventHandler<SocketGuildUser> UserJoined;
-        internal EventHandler<SocketUserMessage> MessageRecieved;
+        internal EventHandler<ServerMessage> MessageRecieved;
         internal EventHandler<SocketGuildUser> UserLeft;
-        internal EventHandler<Tuple<SocketUser, SocketUser>> UserUpdated;
+        internal EventHandler<Tuple<SocketGuildUser, SocketGuildUser>> UserUpdated;
 
         public void userJoined(SocketGuildUser e)
         {
@@ -215,12 +224,12 @@ namespace borkbot
             UserLeft.Invoke(this, e);
         }
 
-        internal void userUpdated(SocketUser oldUser, SocketUser newUser)
+        internal void userUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
         {
             UserUpdated.Invoke(this, Tuple.Create(oldUser,newUser));
         }
 
-        void shutdown(SocketUserMessage e, String m)
+        void shutdown(ServerMessage e, String m)
         {
             isShutdown = !isShutdown;
             if (isShutdown)
@@ -287,11 +296,11 @@ namespace borkbot
             }
         }
 
-        public void messageRecieved(SocketUserMessage e)
+        public void messageRecieved(ServerMessage e)
         {
-            if (e.MentionedUsers.Count(x => x.Id == DC.CurrentUser.Id) > 0 || (altCommand.isOn && e.Content.StartsWith(altCommand.alternativeSyntax)))
+            if (e.msg.MentionedUsers.Count(x => x.Id == DC.CurrentUser.Id) > 0 || (altCommand.isOn && e.msg.Content.StartsWith(altCommand.alternativeSyntax)))
             {
-                var res = parseMessage(e.Content);
+                var res = parseMessage(e.msg.Content);
                 if (res != null)
                     Console.WriteLine(res.Item1 + " - " + res.Item2);
                 try
@@ -404,7 +413,7 @@ namespace borkbot
         }
 
 
-        public string toEmojiString(SocketUserMessage e, string m)
+        public string toEmojiString(ServerMessage e, string m)
         {
             if (m.Length >= 4)
             {

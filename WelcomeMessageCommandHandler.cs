@@ -56,7 +56,7 @@ namespace borkbot
             return commands;
         }
 
-        protected virtual void cmd(SocketUserMessage e, string m)
+        protected virtual void cmd(ServerMessage e, string m)
         {
             var split = m.Split(" ".ToCharArray(),2);
             string message = "";

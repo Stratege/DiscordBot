@@ -20,7 +20,7 @@ namespace borkbot
             return x;
         }
 
-        private void echo(SocketUserMessage e, string m)
+        private void echo(ServerMessage e, string m)
         {
             if (!on)
                 return;
@@ -30,7 +30,7 @@ namespace borkbot
             string[] split = m.Split(" ".ToArray(),2);
             if (split.Length < 2)
                 return;
-            var y = server.getServer().FindChannels(split[0], null, true).FirstOrDefault();
+            var y = server.getServer().TextChannels.Where(chn => chn.Name == split[0]).FirstOrDefault();
             if (y == null)
                 return;
             server.safeSendMessage(y, split[1]);

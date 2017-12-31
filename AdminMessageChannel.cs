@@ -13,7 +13,7 @@ namespace borkbot
         {
             server.UserJoined += (s, u) =>
             {
-                if (on && u.Server.Id == server.getServer().Id && channel != null)
+                if (on && u.Guild.Id == server.getServer().Id && channel != null)
                 {
                     server.safeSendMessage(channel, wmls.Response(u));
                 }
@@ -56,11 +56,11 @@ namespace borkbot
             return cmds;
         }
 
-        private void setadminchannel(SocketUserMessage e, string m)
+        private void setadminchannel(ServerMessage e, string m)
         {
             if (m.Length > 0 && m[0] == '#')
                 m = m.Substring(1);
-            var res = e.Server.AllChannels.FirstOrDefault(x => x.Name == m);
+            var res = e.Server.TextChannels.FirstOrDefault(x => x.Name == m);
             string message;
             if (res == null)
                 message = "Could not find channel: " + m;
@@ -76,26 +76,26 @@ namespace borkbot
 
     class LobbyGreet : WelcomeMessageCommandHandler
     {
-        protected Channel channel;
+        protected SocketTextChannel channel;
         private static string savefile = "Lobbychannel.txt";
         public LobbyGreet(VirtualServer _server) : base(_server, "lobbygreet", "lobbygreet <channel> <on/off> <lobbygreet message>")
         {
             var res = server.FileSetup(savefile);
             if (res.Count > 0)
             {
-                channel = server.getServer().AllChannels.FirstOrDefault(x => x.Name == res[0]);
+                channel = server.getServer().TextChannels.FirstOrDefault(x => x.Name == res[0]);
             }
 
             server.UserJoined += (s, u) =>
             {
-                if (on && u.Server.Id == server.getServer().Id && channel != null)
+                if (on && u.Guild.Id == server.getServer().Id && channel != null)
                 {
                     server.safeSendMessage(channel, wmls.Response(u));
                 }
             };
         }
-
-        protected override void cmd(SocketUserMessage e, string m)
+        
+        protected override void cmd(ServerMessage e, string m)
         {
             string message;
             m = m.Trim();
@@ -105,13 +105,13 @@ namespace borkbot
             else
             {
                 var chanName = m2[0];
-                Channel res;
+                SocketTextChannel res;
                 if (chanName.Length > 1 && chanName[0] == '<' && chanName[1] == '#')
                 {
-                    res = e.Server.AllChannels.FirstOrDefault(x => x.Id.ToString() == chanName.Trim("<>#".ToArray()));
+                    res = e.Server.TextChannels.FirstOrDefault(x => x.Id.ToString() == chanName.Trim("<>#".ToArray()));
                 }
                 else
-                    res = e.Server.AllChannels.FirstOrDefault(x => x.Name == chanName);
+                    res = e.Server.TextChannels.FirstOrDefault(x => x.Name == chanName);
                 if (res == null)
                     message = "Could not find channel: " + chanName;
                 else

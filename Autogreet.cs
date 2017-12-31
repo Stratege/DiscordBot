@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Discord;
+using Discord.WebSocket;
 
 namespace borkbot
 {
@@ -15,8 +15,12 @@ namespace borkbot
             {
                 if (on)
                 {
-                    Channel x = await u.User.CreatePMChannel();
-                    server.safeSendMessage(x,wmls.Response(u));
+                    var x = await u.GetOrCreateDMChannelAsync();
+                    var chn = x as SocketDMChannel;
+                    if (chn != null)
+                        server.safeSendMessage(chn, wmls.Response(u));
+                    else
+                        Console.WriteLine("Could not create DM channel with: " + u.Username);
                 }
             };
         }

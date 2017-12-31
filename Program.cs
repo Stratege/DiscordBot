@@ -49,7 +49,8 @@ namespace borkbot
                         else
                         {
                             SocketTextChannel stc = (SocketTextChannel)msg.Channel;
-                            servers[stc.Guild.Id].messageRecieved((SocketUserMessage)msg);
+                            var convertedMsg = new ServerMessage(stc.Guild, false, stc, (SocketUserMessage)msg, stc.Guild.GetUser(msg.Author.Id));
+                            servers[stc.Guild.Id].messageRecieved(convertedMsg);
                         }
                     }else
                     {
@@ -198,9 +199,9 @@ namespace borkbot
         }
 
 
-        public static bool validateMentionTarget(SocketMessage e, String m)
+        public static bool validateMentionTarget(ServerMessage e, String m)
         {
-            var users = e.MentionedUsers.Where(x => !x.IsBot).Select(x => Tuple.Create(x.Mention, x.Id, x)).ToList();
+            var users = e.msg.MentionedUsers.Where(x => !x.IsBot).Select(x => Tuple.Create(x.Mention, x.Id, x)).ToList();
             //turning this lax... let's hope it works
             //return (users.Count != 0 && m == users[0].Item1);
             return (users.Count != 0);

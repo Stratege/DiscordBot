@@ -21,7 +21,7 @@ namespace borkbot
             return cmds;
         }
 
-        private void math(SocketUserMessage e, string m)
+        private void math(ServerMessage e, string m)
         {
             if (!on)
                 return;

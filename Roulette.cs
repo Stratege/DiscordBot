@@ -22,7 +22,7 @@ namespace borkbot
             return cmd;
         }
 
-        private void roulette(SocketUserMessage e, string m)
+        private void roulette(ServerMessage e, string m)
         {
             if (on)
             {

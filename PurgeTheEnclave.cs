@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Discord;
+using Discord.WebSocket;
 using System.Timers;
 
 namespace borkbot
 {
     class PurgeTheEnclave : EnableableCommandModule
     {
-        Role role;
+        SocketRole role;
         private static string enclaveRoleFile = "Enclaverole.txt";
         private static string adminChan = "Adminchannel.txt";
         Dictionary<ulong, DateTime> watchlist;
         String watchlistPath = "enclavewatch.xml";
-        Channel channel;
+        SocketTextChannel channel;
         TimeSpan span = new TimeSpan(3, 0, 0);
 
         public PurgeTheEnclave(VirtualServer _server) : base(_server, "enclavepurge")
@@ -26,7 +26,7 @@ namespace borkbot
                 var chan = server.FileSetup(adminChan);
                 if (chan.Count > 0)
                 {
-                    channel = server.getServer().AllChannels.FirstOrDefault(x => x.Name == chan[0]);
+                    channel = server.getServer().TextChannels.FirstOrDefault(x => x.Name == chan[0]);
                 }
                 var str = server.FileSetup(enclaveRoleFile);
                 ulong roleId;
@@ -56,23 +56,25 @@ namespace borkbot
 
                 server.UserUpdated += (o, e) =>
                 {
+                    var before = e.Item1;
+                    var after = e.Item2;
                     if (role != null)
                     {
                         try
                         {
-                            bool wasEnclave = e.Before.HasRole(role);
-                            bool isEnclave = e.After.HasRole(role);
-                            if (wasEnclave && !isEnclave && watchlist.ContainsKey(e.After.Id))
+                            bool wasEnclave = before.Roles.Contains(role);
+                            bool isEnclave = after.Roles.Contains(role);
+                            if (wasEnclave && !isEnclave && watchlist.ContainsKey(after.Id))
                             {
-                                Console.WriteLine("no more Enclave for: " + e.After.Name);
-                                watchlist.Remove(e.After.Id);
+                                Console.WriteLine("no more Enclave for: " + after.Username);
+                                watchlist.Remove(after.Id);
                             }
-                            else if (!wasEnclave && isEnclave && !watchlist.ContainsKey(e.After.Id))
+                            else if (!wasEnclave && isEnclave && !watchlist.ContainsKey(after.Id))
                             {
-                                Console.WriteLine("now Enclave: " + e.After.Name);
-                                watchlist.Add(e.After.Id, DateTime.Now);
+                                Console.WriteLine("now Enclave: " + after.Username);
+                                watchlist.Add(after.Id, DateTime.Now);
                                 var z = new Timer(span.TotalMilliseconds);
-                                z.Elapsed += (s, e2) => sendMessage((Timer)s, e.After.Id);
+                                z.Elapsed += (s, e2) => sendMessage((Timer)s, after.Id);
                                 z.Start();
                             }
                         }
@@ -85,8 +87,8 @@ namespace borkbot
 
                 server.UserLeft += (o, e) =>
                 {
-                    if (watchlist.ContainsKey(e.User.Id))
-                        watchlist.Remove(e.User.Id);
+                    if (watchlist.ContainsKey(e.Id))
+                        watchlist.Remove(e.Id);
                 };
             }
             catch (Exception excep)
@@ -104,7 +106,7 @@ namespace borkbot
             return cmds;
         }
 
-        private void setEnclaveRole(SocketUserMessage e, string m)
+        private void setEnclaveRole(ServerMessage e, string m)
         {
             var res = e.Server.Roles.FirstOrDefault(x => x.Name == m);
             string message;
@@ -128,12 +130,12 @@ namespace borkbot
                 t.Dispose();
             }
             var u = server.getServer().GetUser(m);
-            if (u != null && role != null && u.HasRole(role))
+            if (u != null && role != null && u.Roles.Contains(role))
             {
                 if (channel != null)
                 {
                     if(on)
-                        server.safeSendMessage(channel, "It has been a while since " + u.Name + " has gotten the enclave role.");
+                        server.safeSendMessage(channel, "It has been a while since " + u.Username + " has gotten the enclave role.");
                 }
                 var z = new Timer(span.TotalMilliseconds);
                 z.Elapsed += (s, e2) => sendMessage((Timer)s, u.Id);

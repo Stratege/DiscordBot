@@ -14,10 +14,10 @@ namespace borkbot
     {
         VirtualServer server;
         PrivilegeLevel priv;
-        Action<SocketUserMessage, string> cmd;
+        Action<ServerMessage, string> cmd;
         public string syntaxmessage;
 
-        public Command(VirtualServer _server, Action<SocketUserMessage,string> _cmd, PrivilegeLevel _priv, string _syntaxmessage)
+        public Command(VirtualServer _server, Action<ServerMessage, string> _cmd, PrivilegeLevel _priv, string _syntaxmessage)
         {
             server = _server;
             syntaxmessage = _syntaxmessage;
@@ -25,7 +25,7 @@ namespace borkbot
             cmd = _cmd;
         }
 
-        public void invoke(SocketUserMessage e, string m)
+        public void invoke(ServerMessage e, string m)
         {
             if (checkPrivilege(e.Author, e.Channel))
             {
@@ -42,7 +42,7 @@ namespace borkbot
             return (priv == PrivilegeLevel.BotAdmin && server.isAdmin(u,c)) || priv == PrivilegeLevel.Everyone;
         }
 
-        public static Command AdminCommand(VirtualServer _server, Action<SocketUserMessage, String> _cmd, string _syntaxmessage)
+        public static Command AdminCommand(VirtualServer _server, Action<ServerMessage, String> _cmd, string _syntaxmessage)
         {
             return new Command(_server,_cmd, PrivilegeLevel.BotAdmin,_syntaxmessage);
         }

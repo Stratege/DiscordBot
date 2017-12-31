@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Discord;
+using Discord.WebSocket;
 
 namespace borkbot
 {
@@ -21,22 +21,22 @@ namespace borkbot
             return cmds;
         }
 
-        void getWithTag(SocketUserMessage e, String m)
+        void getWithTag(ServerMessage e, String m)
         {
-            var roles = server.getServer().FindRoles(m, true);
+            var roles = server.getServer().Roles.Where(role => role.Name == m);
             String message = "";
             if (roles.Count() != 1)
                 message = "Could not find role: " + m;
             else {
                 var role = roles.First();
-                var x = server.getServer().Users.Where(u => u.HasRole(role));
+                var x = server.getServer().Users.Where(u => u.Roles.Contains(role));
                 message = "Currently has role " + role.Name + ": ";
                 message = SharedCode(e, x, message);
             }
             server.safeSendMessage(e.Channel, message);
         }
 
-        void getUntagged(SocketUserMessage e, String m)
+        void getUntagged(ServerMessage e, String m)
         {
             var x = server.getServer().Users.Where(u => u.Roles.Count() == 1);
             String message = "Currently untagged: ";
@@ -44,12 +44,12 @@ namespace borkbot
             server.safeSendMessage(e.Channel, message);
         }
 
-        String SharedCode(SocketUserMessage e, IEnumerable<User> x, String message)
+        String SharedCode(ServerMessage e, IEnumerable<SocketGuildUser> x, String message)
         {
             foreach (var u in x)
             {
                 message += "\n";
-                message += u.Name;
+                message += u.Username;
             }
             if (message.Length > 2000)
             {
