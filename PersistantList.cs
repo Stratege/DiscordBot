@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace borkbot
 {
-    public class PersistantList
+    public class PersistantList : IEnumerable<string>
     {
         List<String> content;
         String filename;
@@ -56,6 +57,16 @@ namespace borkbot
         public List<String>.Enumerator GetEnumerator()
         {
             return content.GetEnumerator();
+        }
+
+        IEnumerator<string> IEnumerable<string>.GetEnumerator()
+        {
+            return content.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
         }
     }
 }

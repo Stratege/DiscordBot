@@ -34,7 +34,7 @@ namespace borkbot
 
         static String botFinalInfo = "\nspecial note: In the autogreet/admingreet/adminleave use the string literal '{user}' for the bot to replace that part of the message with a mention of the user who just joined";
 
-        Dictionary<String, Command> Commandlist;
+        internal Dictionary<String, Command> Commandlist;
         SocketGuild server;
         DiscordSocketClient DC;
         public PersistantList Admins;
@@ -74,6 +74,8 @@ namespace borkbot
                 addCommands(altCommand.getCommands());
                 addCommands(new GloriousDirectDemocracy(this).getCommands());
                 addCommands(new Store(this).getCommands());
+                addCommands(new RoleCommand(this, DC).getCommands());
+                addCommands(new StrikeModule(this).getCommands());
                 var temp = new List<Tuple<string, Command>>();
 /* TODO: Readd?
                 Action<SocketUserMessage,string> f = (x, y) => { try { var chan = server.TextChannels.Where(z => z.Name == y).FirstOrDefault(); chan.GetMessagesAsync(chan.CachedMessages.OrderBy(z => z.Id).Select(z => z.Id).FirstOrDefault(), Discord.Direction.Before, 100).Wait(); } catch (Exception e) { Console.WriteLine(e); } };
@@ -204,6 +206,7 @@ namespace borkbot
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine("Tried to add " + cmd.Item1);
                     Console.WriteLine(e);
                 }
             }
@@ -370,7 +373,7 @@ namespace borkbot
             return parseMessageString(raw);
         }
 
-        Tuple<String, String> parseMessageString(String raw)
+        internal Tuple<String, String> parseMessageString(String raw)
         {
             string[] split;
             string command;
