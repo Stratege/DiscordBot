@@ -119,7 +119,8 @@ namespace borkbot
         /// <returns></returns>
         private SocketRole GetRoleByID(string roleID)
         {
-            if (ulong.TryParse(roleID, out ulong id))
+            ulong id;
+            if (ulong.TryParse(roleID, out id))
             {
                 return server.getServer().GetRole(ulong.Parse(roleID));
             }

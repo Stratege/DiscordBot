@@ -108,10 +108,11 @@ namespace borkbot
             {
                 var user = Funcs.GetUserByMentionOrName(e.Server.Users, split[0]);
                 var userName = user.Nickname ?? user.Username;
-                
+
 
                 // If the user doesn't have strikes to resolve, print a response
-                if (!UserStrikes.ContainsKey(user.Id) || !int.TryParse(split[1], out int strikeID) || UserStrikes[user.Id][strikeID - 1].Resolved)
+                int strikeID;
+                if (!UserStrikes.ContainsKey(user.Id) || !int.TryParse(split[1], out strikeID) || UserStrikes[user.Id][strikeID - 1].Resolved)
                 {
                     server.safeSendMessage(e.Channel, userName + " does not have any strikes to resolve.");
                 }
