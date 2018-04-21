@@ -46,17 +46,26 @@ namespace borkbot
                     {
                         foreach (var y in localborklist)
                         {
-//                            try
-//                            {
+                            //                            try
+                            //                            {
 
                             //Todo: Rewrite this so that non-server emotes work as well!
-                            IEmote emote = server.getServer().Emotes.Where(x => { Console.WriteLine("Emote: " + x + " has Name " + x.Name + " and Url " + x.Url); return x.Name == y; }).FirstOrDefault();
-                            if (emote != null)
+
+                            //                            IEmote emote = server.getServer().Emotes.Where(x => x.ToString() == "<"+y+">").FirstOrDefault();
+                            Emote emote;
+
+                            if (Emote.TryParse(y, out emote) && server.getServer().Emotes.Contains(emote))
+                            {
                                 e.msg.AddReactionAsync(emote);
-                            else
+                            }else
+                            {
+                                //todo: figure out how to remove an emoji after adding it failed?
+                                e.msg.AddReactionAsync(new Emoji(y));
+                            }
+/*                            else
                             {
                                 Console.WriteLine("could not find emote: " + y);
-                            }
+                            }*/
                                     //bit of a hack to send a special msg
                                     /*                                var x = server.getServer().Client.ClientAPI.Send(new EmojiAddRequest(e.Channel.Id, e.Message.Id, y));
                                                                     x.Wait();
@@ -86,20 +95,32 @@ namespace borkbot
         {
             var split = m.Split(" ".ToCharArray());
             string message = "Unable to comply with command. \n\n bork <mention-target> <emoticon> <on/off>";
+            Console.WriteLine("Bork cmd got: "+m);
             if (split.Length == 3)
             {
                 if (Funcs.validateMentionTarget(e, split[0]))
                 {
-                    string emoji = server.toEmojiString(e, split[1]);
+                    Emote emote;
+                    //string emoji = server.toEmojiString(e, split[1]);
+                    IEmote emoji = null;
+                    if(Emote.TryParse(split[1], out emote))
+                    {
+                        emoji = emote;
+                    }else
+                    {
+                        emoji = new Emoji(split[1]);
+                        server.safeSendMessage(e.Channel,split[1] + " is not a server emote, optimistically assuming it works anyway.");
+                    }
                     if (emoji != null)
                     {
-                        ulong userId = e.Server.Users.First(x => x.Mention == split[0] /*|| x.NicknameMention == split[0]*/ || x.Username == split[0] || x.Nickname == split[0]).Id;
-                        if (userId == 0)
+                        var user = Funcs.GetUserByMentionOrName(e.Server.Users, split[0]);
+                        if (user == null)
                         {
                             message = "Could not find user: " + m;
                         }
                         else
                         {
+                            ulong userId = user.Id;
                             if (split[2] == "on")
                             {
                                 //                            var x = DC.ClientAPI.Send(new EmojiAddRequest(e.Channel.Id, e.Message.Id, ));
@@ -110,15 +131,15 @@ namespace borkbot
                                     individualBorklist = new List<string>();
                                     borklist.Add(userId, individualBorklist);
                                 }
-                                if (individualBorklist.Contains(emoji))
+                                if (individualBorklist.Contains(emoji.ToString()))
                                 {
                                     message = "Already doing this";
                                 }
                                 else
                                 {
-                                    individualBorklist.Add(emoji);
+                                    individualBorklist.Add(emoji.ToString());
                                     server.XMlDictSerialization(borklistPath, borklist);
-                                    message = "Understood, borking <" + emoji + "> at " + split[0] + " from now on";
+                                    message = "Understood, borking " + emoji + " at " + split[0] + " from now on";
                                 }
                             }
                             else if (split[2] == "off")
@@ -130,14 +151,18 @@ namespace borkbot
                                 }
                                 else
                                 {
-                                    individualBorklist.Remove(emoji);
+                                    individualBorklist.Remove(emoji.ToString());
                                     if (individualBorklist.Count == 0)
                                         borklist.Remove(userId);
                                     server.XMlDictSerialization(borklistPath, borklist);
-                                    message = "Understood, no more borking <" + emoji + "> at " + split[0] + " from now on";
+                                    message = "Understood, no more borking " + emoji + " at " + split[0] + " from now on";
                                 }
                             }
                         }
+                    }
+                    else
+                    {
+                        message = "Invalid Emoji: " + split[1];
                     }
                 }
             }

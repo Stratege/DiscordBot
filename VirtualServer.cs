@@ -28,7 +28,7 @@ namespace borkbot
     }
 
 
-    class VirtualServer
+    public class VirtualServer
     {
         String botInfo = "Syntax of this Bot:\n@mention command-name command-parameters\n\nAvailable Commands: \n";
 
@@ -72,6 +72,8 @@ namespace borkbot
                 addCommands(new RunQuery(this).getCommands());
                 altCommand = new AlternativeCommand(this);
                 addCommands(altCommand.getCommands());
+                addCommands(new GloriousDirectDemocracy(this).getCommands());
+                addCommands(new Store(this).getCommands());
                 var temp = new List<Tuple<string, Command>>();
 /* TODO: Readd?
                 Action<SocketUserMessage,string> f = (x, y) => { try { var chan = server.TextChannels.Where(z => z.Name == y).FirstOrDefault(); chan.GetMessagesAsync(chan.CachedMessages.OrderBy(z => z.Id).Select(z => z.Id).FirstOrDefault(), Discord.Direction.Before, 100).Wait(); } catch (Exception e) { Console.WriteLine(e); } };
@@ -244,12 +246,12 @@ namespace borkbot
             return server;
         }
 
-        async public void safeSendMessage(ISocketMessageChannel c, string m)
+        async public Task<Discord.Rest.RestUserMessage> safeSendMessage(ISocketMessageChannel c, string m)
         {
             if(c == null)
             {
                 Console.WriteLine("tried to send to no channel at all: " + m);
-                return;
+                return null;
             }
             /*
             if(c.Server == null)
@@ -264,7 +266,7 @@ namespace borkbot
             if(server == null)
             {
                 Console.WriteLine("Virtualserver's server was null at the time of sending! " + m);
-                return;
+                return null;
             }
             SocketTextChannel stc = null;
             if(c.GetType() == typeof(SocketTextChannel))
@@ -274,16 +276,16 @@ namespace borkbot
             if (stc != null && stc.Guild.Id != server.Id)
             {
                 Console.WriteLine("something tried to send an illegal message: " + m);
-                return;
+                return null;
             }
             try
             {
                 if (stc != null)
                 {
-                    await stc.SendMessageAsync(m);
+                    return await stc.SendMessageAsync(m);
                 }else if(c.GetType() == typeof(SocketDMChannel))
                 {
-                    await ((SocketDMChannel)c).SendMessageAsync(m);
+                    return await ((SocketDMChannel)c).SendMessageAsync(m);
                 }
                 else
                 {
@@ -294,6 +296,7 @@ namespace borkbot
             {
                 Console.WriteLine(e);
             }
+            return null;
         }
 
         public void messageRecieved(ServerMessage e)

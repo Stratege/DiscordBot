@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Discord.WebSocket;
 using System.Xml.Serialization;
 using System.IO;
+using Discord.Net.Providers.WS4Net;
 
 namespace borkbot
 {
@@ -20,7 +21,6 @@ namespace borkbot
 
 
 
-
         Program()
         {
             Cruft().GetAwaiter().GetResult();
@@ -30,7 +30,10 @@ namespace borkbot
             Console.WriteLine("Booting up");
             DiscordSocketConfig cfgbld = new DiscordSocketConfig();
             //            DiscordConfigBuilder cfgbld = new DiscordConfigBuilder();
-            cfgbld.MessageCacheSize = 10000000;
+            cfgbld.MessageCacheSize = 100000;
+            Console.WriteLine("WebSocketProvider: " + cfgbld.WebSocketProvider);
+            cfgbld.WebSocketProvider = Discord.Net.Providers.WS4Net.WS4NetProvider.Instance;
+            Console.WriteLine("WebSocketProvider: "+cfgbld.WebSocketProvider);
             DC = new DiscordSocketClient(cfgbld);
             PrivateMessageHandler pmHandler = new PrivateMessageHandler(DC, servers);
             
@@ -80,6 +83,7 @@ namespace borkbot
             bool firstSetup = true;
             DC.Ready += async () =>
             {
+                Console.WriteLine("there?");
                 if (firstSetup)
                 {
                    await Task.Run(() =>
@@ -92,6 +96,7 @@ namespace borkbot
             
             DC.GuildAvailable += async (sg) =>
             await Task.Run(() => {
+                Console.WriteLine("here?");
                 if (!servers.ContainsKey(sg.Id))
                     servers.Add(sg.Id, new VirtualServer(DC, sg));
                 else
@@ -107,12 +112,33 @@ namespace borkbot
                             servers.Remove(e.Server);
                         };
                         */
+            DC.Connected += () =>
+            {
+                Console.WriteLine("connected for real");
+                return Task.FromResult<object>(null);
+            };
+            DC.Log += (msg) =>
+            {
+                Console.WriteLine("Log Message: " + msg);
+                return Task.FromResult<object>(null);
+            };
+
+            DC.MessageDeleted += (msg, origin) =>
+            {
+                if (msg.Value != null)
+                    Console.WriteLine("Deleted Message was: " +origin+" "+msg.Value.Timestamp+" "+ msg.Value.Author +": "+msg.Value.Content);
+                else
+                    Console.WriteLine("Deleted unknown message with Id: " + msg.Id);
+                return Task.FromResult<object>(null);
+            };
+
             Console.WriteLine("Execute phase");
             var token = File.ReadAllText("token.txt");
+            Console.WriteLine("token: '" + token + "'");
             await DC.LoginAsync(Discord.TokenType.Bot,token);
             Console.WriteLine("supposedly connected");
             await DC.StartAsync();
-
+            Console.WriteLine("and start async passed");
             //block forever
             await Task.Delay(-1);
         }
@@ -287,6 +313,19 @@ namespace borkbot
             }
 
             return r;
+        }
+
+        static public SocketGuildUser GetUserByMentionOrName(IEnumerable<SocketGuildUser> users, String str)
+        {
+            String mentionString;
+            if (str[0] == '<' && str[1] == '@' && str[2] != '!')
+            {
+                mentionString = "<@!" + str.Substring(2);
+            }else
+            {
+                mentionString = str;
+            }
+            return users.FirstOrDefault(x => x.Mention == mentionString /*|| x.NicknameMention == split[0]*/ || x.Username == str || x.Nickname == str);
         }
 
     }

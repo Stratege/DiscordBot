@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace borkbot
 {
-    class PersistantList
+    public class PersistantList
     {
         List<String> content;
         String filename;

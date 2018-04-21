@@ -35,7 +35,7 @@ namespace borkbot
                     throw new Exception("oops no DC");
                 if (DC.CurrentUser == null)
                     throw new Exception("oops no CurrentUser");
-                if (!(e.Channel.GetType() != typeof(SocketDMChannel)))
+                if ((e.Channel.GetType() != typeof(SocketDMChannel)))
                 {
                     Console.WriteLine("error in the code! Sending non-private messages to PMHandler!");
                     return;
