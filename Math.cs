@@ -17,14 +17,12 @@ namespace borkbot
         public override List<Tuple<string, Command>> getCommands()
         {
             var cmds = base.getCommands();
-            cmds.Add(new Tuple<string, Command>("math", new Command(server, math, PrivilegeLevel.Everyone, "math <just play with it, not writing the full grammar in the hint>")));
+            cmds.Add(new Tuple<string, Command>("math", makeEnableableCommand(math, PrivilegeLevel.Everyone, "math <just play with it, not writing the full grammar in the hint>")));
             return cmds;
         }
 
         private void math(ServerMessage e, string m)
         {
-            if (!on)
-                return;
             var res = parser.parse(m);
             if (res != null)
             {

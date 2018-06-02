@@ -16,14 +16,12 @@ namespace borkbot
         public override List<Tuple<string, Command>> getCommands()
         {
             var xs = base.getCommands();
-            xs.Add(new Tuple<string, Command>("killusermessages", Command.AdminCommand(server, kill, "killusermessages <usermention>")));
+            xs.Add(new Tuple<string, Command>("killusermessages", makeEnableableAdminCommand(kill, "killusermessages <usermention>")));
             return xs;
         }
 
         private void kill(ServerMessage e, string m)
         {
-            if (!on)
-                return;
             var now = e.msg.Timestamp;
             var fifteenMins = new TimeSpan(0, 15, 0);
             try

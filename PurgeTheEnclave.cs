@@ -101,7 +101,7 @@ namespace borkbot
         public override List<Tuple<string, Command>> getCommands()
         {
             var cmds = base.getCommands();
-            cmds.Add(new Tuple<string, Command>("setenclaverole", Command.AdminCommand(server, setEnclaveRole, "setenclaverole <role>")));
+            cmds.Add(new Tuple<string, Command>("setenclaverole", makeEnableableAdminCommand(setEnclaveRole, "setenclaverole <role>")));
 
             return cmds;
         }

@@ -18,7 +18,7 @@ namespace borkbot
         public override List<Tuple<string, Command>> getCommands()
         {
             var cmd = base.getCommands();
-            cmd.Add(new Tuple<string, Command>("roulette", new Command(server,roulette, PrivilegeLevel.Everyone, "roulette")));
+            cmd.Add(new Tuple<string, Command>("roulette", makeEnableableCommand(roulette, PrivilegeLevel.Everyone, "roulette")));
             return cmd;
         }
 

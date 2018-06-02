@@ -262,9 +262,9 @@ namespace borkbot
         public override List<Tuple<string, Command>> getCommands()
         {
             var cmds = base.getCommands();
-            cmds.Add(Tuple.Create("proposal", Command.AdminCommand(server, proposal, "proposal - see proposalsyntax command")));
-            cmds.Add(Tuple.Create("proposalSyntax", Command.AdminCommand(server, proposalsyntax, "proposalsyntax")));
-            cmds.Add(Tuple.Create("vote", new Command(server, vote, PrivilegeLevel.Everyone, "vote <ProposalName> <VoteOption>")));
+            cmds.Add(Tuple.Create("proposal", makeEnableableAdminCommand(proposal, "proposal - see proposalsyntax command")));
+            cmds.Add(Tuple.Create("proposalSyntax", makeEnableableAdminCommand(proposalsyntax, "proposalsyntax")));
+            cmds.Add(Tuple.Create("vote", makeEnableableCommand(vote, PrivilegeLevel.Everyone, "vote <ProposalName> <VoteOption>")));
             return cmds;
         }
 

@@ -29,7 +29,17 @@ namespace borkbot
             return cmd;
         }
 
-        
+        protected Command makeEnableableCommand(Action<ServerMessage,string> cmd, PrivilegeLevel priv, string syntaxmsg)
+        {
+            Action<ServerMessage, string> f = (x, y) => { if (!on) return; cmd(x, y); };
+            return new Command(server, f, priv, syntaxmsg);
+        }
+
+        protected Command makeEnableableAdminCommand(Action<ServerMessage, string> cmd, string syntaxmsg)
+        {
+            Action<ServerMessage, string> f = (x, y) => { if (!on) return; cmd(x, y); };
+            return Command.AdminCommand(server, f, syntaxmsg);
+        }
 
         private void enableroll(ServerMessage e, string m)
         {

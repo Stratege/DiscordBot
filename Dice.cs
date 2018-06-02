@@ -18,24 +18,21 @@ namespace borkbot
         public override List<Tuple<string, Command>> getCommands()
         {
             var cmd = base.getCommands();
-            cmd.Add(new Tuple<string, Command>("roll", new Command(server,roll,PrivilegeLevel.Everyone,"roll XdY")));
+            cmd.Add(new Tuple<string, Command>("roll", makeEnableableCommand(roll,PrivilegeLevel.Everyone,"roll XdY")));
             return cmd;
         }
 
         private void roll(ServerMessage e, string m)
         {
-            if (on)
+            var split = m.Split("d".ToArray(), 2);
+            int diceNum;
+            int diceSides;
+            if (split.Length == 2 && int.TryParse(split[0], out diceNum) && int.TryParse(split[1], out diceSides))
             {
-                var split = m.Split("d".ToArray(), 2);
-                int diceNum;
-                int diceSides;
-                if (split.Length == 2 && int.TryParse(split[0], out diceNum) && int.TryParse(split[1], out diceSides))
-                {
-                    var res = roll(rnd, diceNum, diceSides);
-                    string message = m + " = " + res.Item1 + " (" + res.Item2 + ")";
+                var res = roll(rnd, diceNum, diceSides);
+                string message = m + " = " + res.Item1 + " (" + res.Item2 + ")";
 
-                    server.safeSendMessage(e.Channel, message);
-                }
+                server.safeSendMessage(e.Channel, message);
             }
         }
 

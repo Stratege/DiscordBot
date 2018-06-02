@@ -16,14 +16,12 @@ namespace borkbot
         public override List<Tuple<string, Command>> getCommands()
         {
             var x = base.getCommands();
-            x.Add(new Tuple<string, Command>("echo", new Command(server,echo, PrivilegeLevel.BotAdmin, "")));
+            x.Add(new Tuple<string, Command>("echo", makeEnableableAdminCommand(echo, "")));
             return x;
         }
 
         private void echo(ServerMessage e, string m)
         {
-            if (!on)
-                return;
 
             //            if (!e.Channel.IsPrivate)
             //                return;

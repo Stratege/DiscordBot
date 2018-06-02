@@ -61,10 +61,10 @@ namespace borkbot
         public override List<Tuple<string, Command>> getCommands()
         {
             var commands = base.getCommands();
-            commands.Add(new Tuple<string, Command>("role", new Command(server, ModifyRoles, PrivilegeLevel.Everyone, "role <role name>")));
-            commands.Add(new Tuple<string, Command>("fullaccess", new Command(server, GrantFullAccess, PrivilegeLevel.Everyone, "fullaccess")));
-            commands.Add(new Tuple<string, Command>("modifywhitelistedrole", new Command(server, ModifyWhitelistedRole, PrivilegeLevel.BotAdmin, "modifywhitelistedrole <role name>")));
-            commands.Add(new Tuple<string, Command>("printwhitelistedroles", new Command(server, PrintWhitelistedRoles, PrivilegeLevel.BotAdmin, "printwhitelistedroles <role name>")));
+            commands.Add(new Tuple<string, Command>("role", makeEnableableCommand(ModifyRoles, PrivilegeLevel.Everyone, "role <role name>")));
+            commands.Add(new Tuple<string, Command>("fullaccess", makeEnableableCommand(GrantFullAccess, PrivilegeLevel.Everyone, "fullaccess")));
+            commands.Add(new Tuple<string, Command>("modifywhitelistedrole", makeEnableableAdminCommand(ModifyWhitelistedRole, "modifywhitelistedrole <role name>")));
+            commands.Add(new Tuple<string, Command>("printwhitelistedroles", makeEnableableAdminCommand(PrintWhitelistedRoles, "printwhitelistedroles <role name>")));
 
             // Go over all the whitelisted roles to create their own !<role name> commands, to toggle them individually
             foreach (var roleID in WhitelistedRoles)

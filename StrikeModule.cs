@@ -81,12 +81,12 @@ namespace borkbot
         public override List<Tuple<string, Command>> getCommands()
         {
             var commands = base.getCommands();
-            commands.Add(new Tuple<string, Command>("strike", new Command(server, StrikeUser, PrivilegeLevel.BotAdmin, "strike <user tag> <reason>")));
-            commands.Add(new Tuple<string, Command>("setstrikechannel", new Command(server, SetStrikeChannel, PrivilegeLevel.BotAdmin, "setstrikechannel <channel name>")));
-            commands.Add(new Tuple<string, Command>("printallstrikes", new Command(server, PrintAllStrikes, PrivilegeLevel.BotAdmin, "printallstrikes")));
-            commands.Add(new Tuple<string, Command>("resolveallstrikes", new Command(server, ResolveAllStrikes, PrivilegeLevel.BotAdmin, "resolveallstrikes")));
-            commands.Add(new Tuple<string, Command>("resolvestrike", new Command(server, ResolveStrike, PrivilegeLevel.BotAdmin, "resovlestrike <user tag> <strike number> <reason>")));
-            commands.Add(new Tuple<string, Command>("printstrikes", new Command(server, PrintStrikes, PrivilegeLevel.Everyone, "printstrikes")));
+            commands.Add(new Tuple<string, Command>("strike", makeEnableableAdminCommand(StrikeUser, "strike <user tag> <reason>")));
+            commands.Add(new Tuple<string, Command>("setstrikechannel", makeEnableableAdminCommand(SetStrikeChannel, "setstrikechannel <channel name>")));
+            commands.Add(new Tuple<string, Command>("printallstrikes", makeEnableableAdminCommand(PrintAllStrikes, "printallstrikes")));
+            commands.Add(new Tuple<string, Command>("resolveallstrikes", makeEnableableAdminCommand(ResolveAllStrikes, "resolveallstrikes")));
+            commands.Add(new Tuple<string, Command>("resolvestrike", makeEnableableAdminCommand(ResolveStrike, "resolvestrike <user tag> <strike number> <reason>")));
+            commands.Add(new Tuple<string, Command>("printstrikes", makeEnableableCommand(PrintStrikes, PrivilegeLevel.Everyone, "printstrikes")));
             return commands;
         }
 
