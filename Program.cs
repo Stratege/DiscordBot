@@ -120,8 +120,14 @@ namespace borkbot
             DC.Log += (msg) =>
             {
                 Console.WriteLine("Log Message: " + msg);
+                if(msg.Message.ToLower() == "failed to resume previous session")
+                {
+                    //we just, you know, quit
+                    System.Environment.Exit(0);
+                }
                 return Task.FromResult<object>(null);
             };
+
 
             DC.MessageDeleted += (msg, origin) =>
             {
