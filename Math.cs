@@ -324,7 +324,7 @@ namespace borkbot
                 addFunc("*", (x, y) => (x * y));
                 addFunc("\\*", (x, y) => (x * y));
                 addFunc("/", (x, y) => (x / y));
-                addFunc("^", (x, y) => (y > 20 ? 0 : (y < -20 ? 0 : (int)System.Math.Pow(x, y))));
+                addFunc("^", (x, y) => (y > 99 ? 0 : (y < -99 ? 0 : (int)System.Math.Pow(x, y))));
                 Func<Tuple<int, string>, Tuple<int, string>, Tuple<int, string>> diceroll = (x, y) => { var res = Dice.roll(rnd, x.Item1, y.Item1); return (res != null ? t(res.Item1, "[rolled: **" + res.Item1 + "** = " + res.Item2 + " with " + x.Item2 + "d" + y.Item2 + "]") : t(0, "[invalid: " + x.Item2 + "d" + y.Item2 + "]")); };
                 funcs.Add("d", diceroll);
                 funcs.Add("D", diceroll);
