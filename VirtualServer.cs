@@ -249,7 +249,7 @@ namespace borkbot
             return server;
         }
 
-        async public Task<Discord.Rest.RestUserMessage> safeSendMessage(ISocketMessageChannel c, string m)
+        async public Task<Discord.Rest.RestUserMessage> safeSendMessage(ISocketMessageChannel c, string m, bool splitMessage = false)
         {
             if(c == null)
             {
@@ -280,6 +280,11 @@ namespace borkbot
             {
                 Console.WriteLine("something tried to send an illegal message: " + m);
                 return null;
+            }
+            while(splitMessage && m.Length >= 2000)
+            {
+                await safeSendMessage(c, m.Substring(0, 1999), false);
+                m = m.Substring(1999);
             }
             try
             {
