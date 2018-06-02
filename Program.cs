@@ -18,14 +18,12 @@ namespace borkbot
         static void Main(string[] args)
         { new Program(); }
 
-
-
-
         Program()
         {
             Cruft().GetAwaiter().GetResult();
         }
-        private async Task Cruft() { 
+        private async Task Cruft()
+        {
             servers = new Dictionary<ulong, VirtualServer>();
             Console.WriteLine("Booting up");
             DiscordSocketConfig cfgbld = new DiscordSocketConfig();
@@ -33,12 +31,33 @@ namespace borkbot
             cfgbld.MessageCacheSize = 100000;
             Console.WriteLine("WebSocketProvider: " + cfgbld.WebSocketProvider);
             cfgbld.WebSocketProvider = Discord.Net.Providers.WS4Net.WS4NetProvider.Instance;
-            Console.WriteLine("WebSocketProvider: "+cfgbld.WebSocketProvider);
+            Console.WriteLine("WebSocketProvider: " + cfgbld.WebSocketProvider);
             DC = new DiscordSocketClient(cfgbld);
             PrivateMessageHandler pmHandler = new PrivateMessageHandler(DC, servers);
-            
+
+            DC.ReactionAdded += async (a, b, reaction) =>
+            await Task.Run(() =>
+            {
+                if (reaction.Channel is SocketTextChannel)
+                {
+                    servers[(reaction.Channel as SocketTextChannel).Guild.Id].reactionAdded(reaction);
+                }
+
+            });
+
+            DC.ReactionRemoved += async (a, b, reaction) =>
+            await Task.Run(() =>
+            {
+                if (reaction.Channel is SocketTextChannel)
+                {
+                    servers[(reaction.Channel as SocketTextChannel).Guild.Id].reactionRemoved(reaction);
+                }
+
+            });
+
             DC.MessageReceived += async (msg) =>
-                await Task.Run(() => {
+                await Task.Run(() =>
+                {
                     //we ignore our own messages
                     if (msg.Author.Id == DC.CurrentUser.Id)
                         return;
@@ -55,26 +74,31 @@ namespace borkbot
                             var convertedMsg = new ServerMessage(stc.Guild, false, stc, (SocketUserMessage)msg, stc.Guild.GetUser(msg.Author.Id));
                             servers[stc.Guild.Id].messageRecieved(convertedMsg);
                         }
-                    }else
+                    }
+                    else
                     {
                         Console.WriteLine("Did not handle non-user msg: " + msg);
                     }
                 });
             DC.UserJoined += async (user) =>
-             await Task.Run(() => {
+             await Task.Run(() =>
+             {
                  servers[user.Guild.Id].userJoined(user);
-            });
+             });
             DC.UserLeft += async (user) =>
-             await Task.Run(() => {
+             await Task.Run(() =>
+             {
                  servers[user.Guild.Id].userLeft(user);
              });
 
-            DC.UserUpdated += async (userOld,userNew) =>
-             await Task.Run(() => {
+            DC.UserUpdated += async (userOld, userNew) =>
+             await Task.Run(() =>
+             {
                  if (userNew.GetType() == typeof(SocketGuildUser))
                  {
-                     servers[((SocketGuildUser)userNew).Guild.Id].userUpdated((SocketGuildUser)userOld,(SocketGuildUser)userNew);
-                 }else
+                     servers[((SocketGuildUser)userNew).Guild.Id].userUpdated((SocketGuildUser)userOld, (SocketGuildUser)userNew);
+                 }
+                 else
                  {
                      Console.WriteLine("Unhandled User Update received:\n" + userOld + "\nand\n" + userNew);
                  }
@@ -86,16 +110,17 @@ namespace borkbot
                 Console.WriteLine("there?");
                 if (firstSetup)
                 {
-                   await Task.Run(() =>
-                   {
-                       Console.WriteLine("Battlebot operational");
-                       firstSetup = false;
-                   });
+                    await Task.Run(() =>
+                    {
+                        Console.WriteLine("Battlebot operational");
+                        firstSetup = false;
+                    });
                 }
             };
-            
+
             DC.GuildAvailable += async (sg) =>
-            await Task.Run(() => {
+            await Task.Run(() =>
+            {
                 Console.WriteLine("here?");
                 if (!servers.ContainsKey(sg.Id))
                     servers.Add(sg.Id, new VirtualServer(DC, sg));
@@ -120,7 +145,7 @@ namespace borkbot
             DC.Log += (msg) =>
             {
                 Console.WriteLine("Log Message: " + msg);
-                if(msg.Message.ToLower() == "failed to resume previous session")
+                if (msg.Message.ToLower() == "failed to resume previous session")
                 {
                     //we just, you know, quit
                     System.Environment.Exit(0);
@@ -132,7 +157,7 @@ namespace borkbot
             DC.MessageDeleted += (msg, origin) =>
             {
                 if (msg.Value != null)
-                    Console.WriteLine("Deleted Message was: " +origin+" "+msg.Value.Timestamp+" "+ msg.Value.Author +": "+msg.Value.Content);
+                    Console.WriteLine("Deleted Message was: " + origin + " " + msg.Value.Timestamp + " " + msg.Value.Author + ": " + msg.Value.Content);
                 else
                     Console.WriteLine("Deleted unknown message with Id: " + msg.Id);
                 return Task.FromResult<object>(null);
@@ -141,20 +166,13 @@ namespace borkbot
             Console.WriteLine("Execute phase");
             var token = File.ReadAllText("token.txt");
             Console.WriteLine("token: '" + token + "'");
-            await DC.LoginAsync(Discord.TokenType.Bot,token);
+            await DC.LoginAsync(Discord.TokenType.Bot, token);
             Console.WriteLine("supposedly connected");
             await DC.StartAsync();
             Console.WriteLine("and start async passed");
             //block forever
             await Task.Delay(-1);
         }
-
-        
-
-        
-
-
-
     }
     /*
     public class EmojiAddRequest : Discord.API.IRestRequest
@@ -327,7 +345,8 @@ namespace borkbot
             if (str[0] == '<' && str[1] == '@' && str[2] != '!')
             {
                 mentionString = "<@!" + str.Substring(2);
-            }else
+            }
+            else
             {
                 mentionString = str;
             }

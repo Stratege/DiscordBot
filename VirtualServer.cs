@@ -73,9 +73,9 @@ namespace borkbot
                 altCommand = new AlternativeCommand(this);
                 addCommands(altCommand.getCommands());
                 addCommands(new GloriousDirectDemocracy(this).getCommands());
-                addCommands(new Store(this).getCommands());
                 addCommands(new RoleCommand(this, DC).getCommands());
                 addCommands(new StrikeModule(this).getCommands());
+                addCommands(new EmoteModule(this).getCommands());
                 var temp = new List<Tuple<string, Command>>();
 /* TODO: Readd?
                 Action<SocketUserMessage,string> f = (x, y) => { try { var chan = server.TextChannels.Where(z => z.Name == y).FirstOrDefault(); chan.GetMessagesAsync(chan.CachedMessages.OrderBy(z => z.Id).Select(z => z.Id).FirstOrDefault(), Discord.Direction.Before, 100).Wait(); } catch (Exception e) { Console.WriteLine(e); } };
@@ -218,6 +218,18 @@ namespace borkbot
         internal EventHandler<ServerMessage> MessageRecieved;
         internal EventHandler<SocketGuildUser> UserLeft;
         internal EventHandler<Tuple<SocketGuildUser, SocketGuildUser>> UserUpdated;
+        internal EventHandler<SocketReaction> ReactionAdded;
+        internal EventHandler<SocketReaction> ReactionRemoved;
+
+        public void reactionAdded(SocketReaction reaction)
+        {
+            ReactionAdded.Invoke(this, reaction);
+        }
+
+        public void reactionRemoved(SocketReaction reaction)
+        {
+            ReactionRemoved.Invoke(this, reaction);
+        }
 
         public void userJoined(SocketGuildUser e)
         {
