@@ -421,9 +421,16 @@ namespace borkbot
             {
                 return "Proposal #"+ ret.Item2 +" - '" + name + "' has already been started";
             }
-            prop.start(x => savePropToDisc(ret.Item2, x), server, arg1, ret.Item2);
-            queuePropEnd(prop,ret.Item2);
-            return "Proposal #" +ret.Item2+" - '"+name+"' has been started";
+            var task = prop.start(x => savePropToDisc(ret.Item2, x), server, arg1, ret.Item2);
+            task.Wait();
+            if (task.Result)
+            {
+                queuePropEnd(prop, ret.Item2);
+                return "Proposal #" + ret.Item2 + " - '" + name + "' has been started";
+            }else
+            {
+                return "Failed to start Proposal #" + ret.Item2 + " - this is a bug and should be reported";
+            }
         }
 
         private void queuePropEnd(Proposal prop, ulong propId)
@@ -521,7 +528,7 @@ namespace borkbot
         private string proposalLookupById(ServerMessage arg1, string idString)
         {
             ulong id;
-            if(!ulong.TryParse("idString",out id))
+            if(!ulong.TryParse(idString,out id))
             {
                 return "Could not parse " + idString + " into an Integer Number";
             }
