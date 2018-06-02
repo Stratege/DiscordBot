@@ -239,7 +239,7 @@ namespace borkbot
             if (!on)
                 return;
 
-            var specifiedRole = e.Server.Roles.FirstOrDefault((r) => r.Name.ToLower() == roleName.ToLower());
+            var specifiedRole = server.getServer().Roles.FirstOrDefault((r) => r.Name.ToLower() == roleName.ToLower());
             if (specifiedRole == null)
             {
                 server.safeSendMessage(e.Channel, "The role " + roleName + " does not exist!");
@@ -292,7 +292,10 @@ namespace borkbot
             foreach (var roleID in WhitelistedRoles)
             {
                 var specifiedRole = GetRoleByID(roleID);
-                e.Author.AddRoleAsync(specifiedRole);
+                if (!specifiedRole.IsMentionable)
+                {
+                    e.Author.AddRoleAsync(specifiedRole);
+                }
             }
 
             server.safeSendMessage(e.Channel, "*Woof!* I have borked all the available roles onto you!");
@@ -342,7 +345,7 @@ namespace borkbot
             // Sanitization, to stop @everyone pings
             roleName = roleName.Replace("@", "");
 
-            var specifiedRole = e.Server.Roles.FirstOrDefault((r) => r.Name.ToLower() == roleName.ToLower());
+            var specifiedRole = server.getServer().Roles.FirstOrDefault((r) => r.Name.ToLower() == roleName.ToLower());
 
             // If there is no such role, print a response
             if (specifiedRole == null)
