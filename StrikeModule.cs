@@ -104,18 +104,30 @@ namespace borkbot
 
             string[] split = message.Split(new char[] { ' ' }, 3);
 
-            if (split.Length == 3 && Funcs.GetUserByMentionOrName(e.Server.Users, split[0]) != null)
+            if (split.Length == 3 && Funcs.GetUserByMentionOrName(server.getServer().Users, split[0]) != null)
             {
-                var user = Funcs.GetUserByMentionOrName(e.Server.Users, split[0]);
+                var user = Funcs.GetUserByMentionOrName(server.getServer().Users, split[0]);
                 var userName = user.Nickname ?? user.Username;
 
-
-                // If the user doesn't have strikes to resolve, print a response
                 int strikeID;
-                if (!UserStrikes.ContainsKey(user.Id) || !int.TryParse(split[1], out strikeID) || UserStrikes[user.Id][strikeID - 1].Resolved)
+                // Print an appropriate response to each scenario
+                if (!UserStrikes.ContainsKey(user.Id))
                 {
                     server.safeSendMessage(e.Channel, userName + " does not have any strikes to resolve.");
                 }
+                else if (!int.TryParse(split[1], out strikeID))
+                {
+                    server.safeSendMessage(e.Channel, "Could not parse the strike number to resolve.");
+                }
+                else if (strikeID < 1 || strikeID > UserStrikes[user.Id].Count)
+                {
+                    server.safeSendMessage(e.Channel, "There are no strikes that correspond to that number.");
+                }
+                else if (UserStrikes[user.Id][strikeID - 1].Resolved)
+                {
+                    server.safeSendMessage(e.Channel, "That specific strike has been resolved already.");
+                }
+                // Resolve the strike
                 else
                 {
                     UserStrikes[user.Id][strikeID - 1].Resolved = true;
@@ -138,9 +150,9 @@ namespace borkbot
 
             string[] split = message.Split(new char[] { ' ' }, 2);
 
-            if (split.Length == 2 && Funcs.GetUserByMentionOrName(e.Server.Users, split[0]) != null)
+            if (split.Length == 2 && Funcs.GetUserByMentionOrName(server.getServer().Users, split[0]) != null)
             {
-                var user = Funcs.GetUserByMentionOrName(e.Server.Users, split[0]);
+                var user = Funcs.GetUserByMentionOrName(server.getServer().Users, split[0]);
                 var userName = user.Nickname ?? user.Username;
 
                 // If the user doesn't have strikes to resolve, print a response
@@ -172,7 +184,7 @@ namespace borkbot
         {
             if (m.Length > 0 && m[0] == '#')
                 m = m.Substring(1);
-            var res = e.Server.TextChannels.FirstOrDefault(x => x.Name == m);
+            var res = server.getServer().TextChannels.FirstOrDefault(x => x.Name == m);
             string message;
             if (res == null)
                 message = "Could not find channel: " + m;
@@ -197,9 +209,9 @@ namespace borkbot
 
             string[] split = message.Split(new char[] { ' ' }, 2);
 
-            if (split.Length == 2 && Funcs.GetUserByMentionOrName(e.Server.Users, split[0]) != null)
+            if (split.Length == 2 && Funcs.GetUserByMentionOrName(server.getServer().Users, split[0]) != null)
             {
-                var user = Funcs.GetUserByMentionOrName(e.Server.Users, split[0]);
+                var user = Funcs.GetUserByMentionOrName(server.getServer().Users, split[0]);
                 var userName = user.Nickname ?? user.Username;
 
                 var strike = new StrikeDetails()
@@ -225,7 +237,7 @@ namespace borkbot
                     // Alert for 3 or more unresolved strikes
                     if (UserStrikes[user.Id].Count((s) => !s.Resolved) >= 3)
                     {
-                        server.safeSendMessage(StrikeChannel, e.Server.EveryoneRole + " " + userName + " has been given their third (or more) strike in " + (e.Channel as SocketTextChannel).Mention + ".\n Reason: " + strike.Reason);
+                        server.safeSendMessage(StrikeChannel, server.getServer().EveryoneRole + " " + userName + " has been given their third (or more) strike in " + (e.Channel as SocketTextChannel).Mention + ".\n Reason: " + strike.Reason);
                     }
                 }
 
@@ -261,7 +273,7 @@ namespace borkbot
                 allStrikes += PrintStrikesNicely(UserStrikes[userID]);
             }
 
-            server.safeSendMessage(e.Channel, allStrikes);
+            server.safeSendMessage(e.Channel, allStrikes, true);
         }
 
         #endregion
@@ -322,6 +334,8 @@ namespace borkbot
                 counter++;
                 printedStrikes += "**" + counter + ".** " + strike + "\n";
             }
+
+            printedStrikes += "Unresolved strikes: " + strikes.Count((s) => !s.Resolved) + "\n";
 
             return printedStrikes;
         }
@@ -406,7 +420,15 @@ namespace borkbot
 
         public override string ToString()
         {
-            return Reason + "\n    Date: " + StrikeDate + "\n    Resolved? " + Resolved + "\n    Resolve Reason: " + ResolveReason + "\n";
+            string strike = Reason + "\n    Date: " + StrikeDate + "\n    Resolved? " + Resolved + "\n    Resolve Reason: " + ResolveReason + "\n";
+
+            // Bold the unresolved strikes
+            if (!Resolved)
+            {
+                strike = "**" + strike + " **";
+            }
+
+            return strike;
         }
 
         #endregion
