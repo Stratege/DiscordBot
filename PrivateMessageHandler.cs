@@ -27,7 +27,7 @@ namespace borkbot
         }
 
 
-        public void messageRecieved(SocketUserMessage e)
+        public void messageRecieved(SocketUserMessage e, bool retry = true)
         {
             try
             {
@@ -63,11 +63,13 @@ namespace borkbot
                         else
                         {
                             safeSendPM((SocketDMChannel)e.Channel, "You are not part of your set server anymore.");
+                            UserToServerMapping.Remove(e.Author.Id);
                         }
                     }
                     else
                     {
                         safeSendPM((SocketDMChannel)e.Channel, "This Bot is not part of your set server anymore.");
+                        UserToServerMapping.Remove(e.Author.Id);
                     }
                 }
                 var x = servers.Values.Where(y => y.getServer().Users.FirstOrDefault(z => z.Id == e.Author.Id) != null).ToList();
@@ -78,8 +80,16 @@ namespace borkbot
                 }
                 else if (x.Count == 1)
                 {
-                    safeSendPM((SocketDMChannel)e.Channel, "Set your server context to " + x[0].getServer().Name + ". Please resend your command.");
+                    safeSendPM((SocketDMChannel)e.Channel, "Set your server context to " + x[0].getServer().Name + ".");
                     SetUserServerMapping(e.Author.Id, x[0].getServer().Id);
+                    //we retry once
+                    if(retry)
+                        messageRecieved(e,false);
+                    else
+                    {
+                        safeSendPM((SocketDMChannel)e.Channel, "There was an issue with setting your server context automatically, please report it to the maintainer.");
+                        throw new Exception("Private msg server auto set is looping");
+                    }
                     return;
                 }
                 else
