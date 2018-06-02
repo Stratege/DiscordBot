@@ -1,0 +1,10 @@
+bin/
+obj/
+*.sln
+*.csproj
+*.jpeg
+packages/
+.vs/
+*.config
+token.txt
+Properties/
