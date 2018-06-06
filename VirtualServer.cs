@@ -7,6 +7,8 @@ using Discord.WebSocket;
 using System.IO;
 using System.Xml.Serialization;
 using System.Threading;
+using Discord;
+using Discord.Rest;
 
 namespace borkbot
 {
@@ -76,6 +78,8 @@ namespace borkbot
                 addCommands(new RoleCommand(this, DC).getCommands());
                 addCommands(new StrikeModule(this).getCommands());
                 addCommands(new EmoteModule(this).getCommands());
+                addCommands(new ReportModule(this).getCommands());
+                
                 var temp = new List<Tuple<string, Command>>();
 /* TODO: Readd?
                 Action<SocketUserMessage,string> f = (x, y) => { try { var chan = server.TextChannels.Where(z => z.Name == y).FirstOrDefault(); chan.GetMessagesAsync(chan.CachedMessages.OrderBy(z => z.Id).Select(z => z.Id).FirstOrDefault(), Discord.Direction.Before, 100).Wait(); } catch (Exception e) { Console.WriteLine(e); } };
@@ -261,7 +265,7 @@ namespace borkbot
             return server;
         }
 
-        async public Task<Discord.Rest.RestUserMessage> safeSendMessage(ISocketMessageChannel c, string m, bool splitMessage = false)
+        async public Task<Discord.Rest.RestUserMessage> safeSendMessage(IMessageChannel c, string m, bool splitMessage = false)
         {
             if(c == null)
             {
@@ -307,6 +311,10 @@ namespace borkbot
                 {
                     return await ((SocketDMChannel)c).SendMessageAsync(m);
                 }
+                else if (c is RestDMChannel)
+                {
+                    return await ((RestDMChannel)c).SendMessageAsync(m);
+                }
                 else
                 {
                     Console.WriteLine("safeSendMessage was unable to deal with passed in msg of type: " + c.GetType());
@@ -341,7 +349,7 @@ namespace borkbot
                         safeSendMessage(e.Channel,
     "Standing by for orders, " + e.Author.Username + @"!
 
-" + botInfo);
+" + botInfo, true);
                     }
                 }
                 catch (Exception exp)
