@@ -77,6 +77,25 @@ namespace borkbot
                 server.fileCommand(_resetDateFile, x => System.IO.File.WriteAllText(x, LastResetDate));
             }
 
+            Action<Emote> f = (emote) =>
+            {
+                // Create a new entry if it doesn't have one
+                if (!Emotes.ContainsKey(emote.Id))
+                {
+                    Emotes.Add(emote.Id, new EmoteStats()
+                    {
+                        Counter = 0,
+                        LastPosted = new DateTimeOffset(DateTime.Now).ToString(),
+                        Name = emote.Name
+                    });
+                }
+
+                // Increment the counter
+                Emotes[emote.Id].Counter++;
+                Emotes[emote.Id].LastPosted = new DateTimeOffset(DateTime.Now).ToString();
+                Emotes.persist();
+            };
+
             // Listen to all incoming messages from the server
             server.MessageRecieved += (s, e) =>
             {
@@ -96,21 +115,8 @@ namespace borkbot
                             Emote emote = tag.Value as Emote;
                             usedEmotes.Add(emote);
 
-                            // Create a new entry if it doesn't have one
-                            if (!Emotes.ContainsKey(emote.Id))
-                            {
-                                Emotes.Add(emote.Id, new EmoteStats()
-                                {
-                                    Counter = 0,
-                                    LastPosted = new DateTimeOffset(DateTime.Now).ToString(),
-                                    Name = emote.Name
-                                });
-                            }
-
-                            // Increment the counter
-                            Emotes[emote.Id].Counter++;
-                            Emotes[emote.Id].LastPosted = new DateTimeOffset(DateTime.Now).ToString();
-                            Emotes.persist();
+                            if (emote != null)
+                                f(emote);
                         }
                     }
                 }
@@ -126,24 +132,11 @@ namespace borkbot
                 if (!reaction.User.Value.IsBot && server.getServer().Emotes.Contains(reaction.Emote))
                 {
                     Emote emote = reaction.Emote as Emote;
-                    lock(_lock)
-                    {
-                        // Create a new entry if it doesn't have one
-                        if (!Emotes.ContainsKey(emote.Id))
+                    if (emote != null)
+                        lock (_lock)
                         {
-                            Emotes.Add(emote.Id, new EmoteStats()
-                            {
-                                Counter = 0,
-                                LastPosted = new DateTimeOffset(DateTime.Now).ToString(),
-                                Name = emote.Name
-                            });
+                            f(emote);
                         }
-
-                        // Increment the counter
-                        Emotes[emote.Id].Counter++;
-                        Emotes[emote.Id].LastPosted = new DateTimeOffset(DateTime.Now).ToString();
-                        Emotes.persist();
-                    }
                 }
             };
 
@@ -156,15 +149,16 @@ namespace borkbot
                 if (!reaction.User.Value.IsBot && server.getServer().Emotes.Contains(reaction.Emote))
                 {
                     Emote emote = reaction.Emote as Emote;
-                    lock (_lock)
-                    {
-                        // Decrement the counter
-                        if (Emotes.ContainsKey(emote.Id))
+                    if (emote != null)
+                        lock (_lock)
                         {
-                            Emotes[emote.Id].Counter--;
-                            Emotes.persist();
+                            // Decrement the counter
+                            if (Emotes.ContainsKey(emote.Id))
+                            {
+                                Emotes[emote.Id].Counter--;
+                                Emotes.persist();
+                            }
                         }
-                    }
                 }
             };
         }
