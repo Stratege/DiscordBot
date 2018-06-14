@@ -188,7 +188,8 @@ namespace borkbot
             string[] split = reply.Split(new char[] { ' ' }, 2);
 
             // Parse the command
-            if (split.Length == 2 && int.TryParse(split[0], out int reportID))
+            int reportID;
+            if (split.Length == 2 && int.TryParse(split[0], out reportID))
             {
                 lock (_lock)
                 {
@@ -222,7 +223,8 @@ namespace borkbot
         private void Ban(ServerMessage e, string report)
         {
             // Parse the command
-            if (int.TryParse(report, out int reportID))
+            int reportID;
+            if (int.TryParse(report, out reportID))
             {
                 lock (_lock)
                 {
@@ -255,7 +257,8 @@ namespace borkbot
         private void UnBan(ServerMessage e, string report)
         {
             // Parse the command
-            if (int.TryParse(report, out int reportID))
+            int reportID;
+            if (int.TryParse(report, out reportID))
             {
                 lock (_lock)
                 {
