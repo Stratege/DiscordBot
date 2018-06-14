@@ -19,6 +19,10 @@ namespace borkbot
         // Represents the whitelisted roles, saved in the file
         private PersistantList whitelistedRoles;
 
+        private string _timeoutFile = "TimeoutRole.txt";
+
+        private SocketRole _timeoutRole;
+
         #endregion
 
         #region Properties
@@ -32,6 +36,19 @@ namespace borkbot
             set
             {
                 whitelistedRoles = value;
+            }
+        }
+
+        public SocketRole TimeoutRole
+        {
+            get
+            {
+                return _timeoutRole;
+            }
+
+            set
+            {
+                _timeoutRole = value;
             }
         }
 
@@ -49,6 +66,13 @@ namespace borkbot
             WhitelistedRoles = PersistantList.Create(server, "WhitelistedRoles.txt");
             _dc.RoleUpdated += _dc_RoleUpdated;
             _dc.RoleDeleted += _dc_RoleDeleted;
+
+            // Get the strike channel to print admin alerts in
+            var res = server.FileSetup(_timeoutFile);
+            if (res.Count > 0)
+            {
+                TimeoutRole = server.getServer().Roles.FirstOrDefault(x => x.Name == res[0]);
+            }
         }
 
         #endregion
@@ -65,6 +89,7 @@ namespace borkbot
             commands.Add(new Tuple<string, Command>("fullaccess", makeEnableableCommand(GrantFullAccess, PrivilegeLevel.Everyone, "fullaccess")));
             commands.Add(new Tuple<string, Command>("modifywhitelistedrole", makeEnableableAdminCommand(ModifyWhitelistedRole, "modifywhitelistedrole <role name>")));
             commands.Add(new Tuple<string, Command>("printwhitelistedroles", makeEnableableAdminCommand(PrintWhitelistedRoles, "printwhitelistedroles <role name>")));
+            commands.Add(new Tuple<string, Command>("settimeoutrole", makeEnableableAdminCommand(SetTimeoutRole, "settimeoutrole <role name>")));
 
             // Go over all the whitelisted roles to create their own !<role name> commands, to toggle them individually
             foreach (var roleID in WhitelistedRoles)
@@ -206,6 +231,30 @@ namespace borkbot
         #region Admin Commands
 
         /// <summary>
+        /// Sets the strike alert channel when a user receives more than 3 strikes
+        /// </summary>
+        /// <param name="e"></param>
+        /// <param name="m"></param>
+        private void SetTimeoutRole(ServerMessage e, string m)
+        {
+            m = m.ToLower();
+            if (m.Length > 0 && m[0] == '#')
+                m = m.Substring(1);
+            var res = server.getServer().Roles.FirstOrDefault(x => x.Name.ToLower() == m);
+            string message;
+            if (res == null)
+                message = "Could not find role: " + m;
+            else
+            {
+                message = "Role was set to: " + res.Name;
+                TimeoutRole = res;
+                server.fileCommand(_timeoutFile, x => System.IO.File.WriteAllText(x, res.Name));
+            }
+            server.safeSendMessage(e.Channel, message);
+        }
+
+
+        /// <summary>
         /// Prints all the current whitelisted roles
         /// </summary>
         /// <param name="e"></param>
@@ -286,7 +335,7 @@ namespace borkbot
         /// <param name="message"></param>
         private void GrantFullAccess(ServerMessage e, string message)
         {
-            if (!on)
+            if (!on || TimeoutRole.Members.Any((u) => u.Id == e.Author.Id))
                 return;
 
             foreach (var roleID in WhitelistedRoles)
@@ -309,7 +358,7 @@ namespace borkbot
         /// <param name="commandRoleName"></param>
         private void ModifyRolesByCommandName(ServerMessage e, string message)
         {
-            if (!on)
+            if (!on || TimeoutRole.Members.Any((u) => u.Id == e.Author.Id))
                 return;
 
             var command = server.parseMessageString(e.msg.Content);
@@ -331,7 +380,7 @@ namespace borkbot
         /// <param name="roleName"></param>
         private void ModifyRoles(ServerMessage e, string roleName)
         {
-            if (!on)
+            if (!on || TimeoutRole.Members.Any((u) => u.Id == e.Author.Id))
                 return;
 
             // Help!
