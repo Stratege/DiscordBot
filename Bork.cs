@@ -54,7 +54,7 @@ namespace borkbot
                             //                            IEmote emote = server.getServer().Emotes.Where(x => x.ToString() == "<"+y+">").FirstOrDefault();
                             Emote emote;
 
-                            if (Emote.TryParse(y, out emote) && server.getServer().Emotes.Contains(emote))
+                            if (Emote.TryParse(y, out emote) && server.getServer().Emotes.Select(em => em.Id).Contains(emote.Id))
                             {
                                 e.msg.AddReactionAsync(emote);
                             }else
@@ -131,7 +131,7 @@ namespace borkbot
                                     individualBorklist = new List<string>();
                                     borklist.Add(userId, individualBorklist);
                                 }
-                                if (individualBorklist.Contains(emoji.ToString()))
+                                if (individualBorklist.Contains(emoji.ToString()) || (emote != null && individualBorklist.Find((ems) => ems.Contains(emote.Id.ToString())) != null))
                                 {
                                     message = "Already doing this";
                                 }
@@ -151,7 +151,18 @@ namespace borkbot
                                 }
                                 else
                                 {
-                                    individualBorklist.Remove(emoji.ToString());
+                                    if (emote != null)
+                                    {
+                                        var t = individualBorklist.Find((ems) => ems.Contains(emote.Id.ToString()));
+                                        if (t != null)
+                                        {
+                                            individualBorklist.Remove(t);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        individualBorklist.Remove(emoji.ToString());
+                                    }
                                     if (individualBorklist.Count == 0)
                                         borklist.Remove(userId);
                                     server.XMlDictSerialization(borklistPath, borklist);
