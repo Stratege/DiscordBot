@@ -54,9 +54,13 @@ namespace borkbot
                 DC = _DC;
                 server = _server;
                 Commandlist = new Dictionary<string, Command>();
-                Commandlist.Add("shutdown", new Command(this, shutdown, PrivilegeLevel.BotAdmin, "shutdown <on/off>"));
-                Commandlist.Add("addbotadmin", new Command(this, addBotAdmin, PrivilegeLevel.BotAdmin, "addbotadmin <mention-target>"));
-                Commandlist.Add("removebotadmin", new Command(this, removeBotAdmin, PrivilegeLevel.BotAdmin, "removebotadmin <mention-target>"));
+
+                var virtualServerCommands = new List<Tuple<String, Command>>(4);
+                virtualServerCommands.Add(Tuple.Create("help", new Command(this, help, PrivilegeLevel.BotAdmin, "help")));
+                virtualServerCommands.Add(Tuple.Create("shutdown", new Command(this, shutdown, PrivilegeLevel.BotAdmin, "shutdown <on/off>")));
+                virtualServerCommands.Add(Tuple.Create("addbotadmin", new Command(this, addBotAdmin, PrivilegeLevel.BotAdmin, "addbotadmin <mention-target>")));
+                virtualServerCommands.Add(Tuple.Create("removebotadmin", new Command(this, removeBotAdmin, PrivilegeLevel.BotAdmin, "removebotadmin <mention-target>")));
+                addCommands(virtualServerCommands);
                 Admins = PersistantList.Create(this,adminfilePath);
                 addCommands(new Admingreet(this).getCommands());
                 addCommands(new Adminleave(this).getCommands());
@@ -260,6 +264,14 @@ namespace borkbot
         }
 
 
+        void help(ServerMessage e, String m)
+        {
+            safeSendMessage(e.Channel,
+"Standing by for orders, " + e.Author.Username + @"!
+
+" + botInfo, true);
+        }
+
         internal SocketGuild getServer()
         {
             return server;
@@ -336,20 +348,9 @@ namespace borkbot
                     Console.WriteLine(res.Item1 + " - " + res.Item2);
                 try
                 {
-                    if (isAdmin(e.Author, e.Channel) && res != null && res.Item1.ToLower() == "shutdown")
-                    {
-                        shutdown(e, res.Item2);
-                    }
-                    else if (res != null)
+                    if (res != null)
                     {
                         Commandlist[res.Item1].invoke(e, res.Item2);
-                    }
-                    else if (isAdmin(e.Author, e.Channel))
-                    {
-                        safeSendMessage(e.Channel,
-    "Standing by for orders, " + e.Author.Username + @"!
-
-" + botInfo, true);
                     }
                 }
                 catch (Exception exp)
