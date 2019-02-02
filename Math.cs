@@ -321,7 +321,8 @@ namespace borkbot
                 funcs = new Dictionary<string, Func<Tuple<int, string>, Tuple<int, string>, Tuple<int,string>>>();
                 addFunc("+", (x, y) => (x + y));
                 addFunc("-", (x, y) => (x - y));
-                addFunc("*", (x, y) => (x * y));
+                funcs.Add("*", (x, y) => t(x.Item1 * y.Item1, "(" + x.Item2 + "\\*" + y.Item2 + ")"));
+//                addFunc("*", (x, y) => (x * y));
                 addFunc("\\*", (x, y) => (x * y));
                 addFunc("/", (x, y) => (x / y));
                 addFunc("^", (x, y) => (y > 99 ? 0 : (y < -99 ? 0 : (int)System.Math.Pow(x, y))));
