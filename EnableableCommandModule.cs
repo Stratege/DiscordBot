@@ -56,7 +56,7 @@ namespace borkbot
                     persistState();
                 }
             }
-            else
+            else if(m == "off")
             {
                 if (on)
                 {
@@ -68,6 +68,9 @@ namespace borkbot
                 {
                     server.safeSendMessage(e.Channel, module_name + " was already disabled.");
                 }
+            }else
+            {
+                server.safeSendMessage(e.Channel, module_name + "is currently " + (on ? "enabled" : "disabled") + ".");
             }
         }
 
