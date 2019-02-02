@@ -200,8 +200,16 @@ namespace borkbot
                     {
                         var user = server.getServer().GetUser(ulong.Parse(userID));
                         var channel = GetDMChannel(user);
-                        server.safeSendMessage(channel, "You have received a reply to your report with the ID **" + reportID + "**:").Wait();
-                        server.safeSendMessage(channel, split[1]).Wait();
+                        if (channel != null)
+                        {
+                            server.safeSendMessage(channel, "You have received a reply to your report with the ID **" + reportID + "**:").Wait();
+                            server.safeSendMessage(channel, split[1]).Wait();
+                            server.safeSendMessage(e.Channel, "successfully responded to report " + reportID);
+                        }
+                        else
+                        {
+                            server.safeSendMessage(e.Channel, "response to report " + reportID + " failed");
+                        }
                     }
                     else
                     {
