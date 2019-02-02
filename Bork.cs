@@ -96,7 +96,7 @@ namespace borkbot
             var split = m.Split(" ".ToCharArray());
             string message = "Unable to comply with command. \n\n bork <mention-target> <emoticon> <on/off>";
             Console.WriteLine("Bork cmd got: "+m);
-            if (split.Length == 3)
+            if (split.Length == 3 || split.Length == 2)
             {
                 if (Funcs.validateMentionTarget(e, split[0]))
                 {
@@ -121,7 +121,18 @@ namespace borkbot
                         else
                         {
                             ulong userId = user.Id;
-                            if (split[2] == "on")
+                            if (split.Length == 2)
+                            {
+                                List<String> individualBorklist;
+                                if(borklist.TryGetValue(userId, out individualBorklist))
+                                {
+                                    message = "currently borking " + emoji + " at " + split[0];
+                                }else
+                                {
+                                    message = "no such bork: " + emoji + " at " + split[0];
+                                }
+                            }
+                            else if (split[2] == "on")
                             {
                                 //                            var x = DC.ClientAPI.Send(new EmojiAddRequest(e.Channel.Id, e.Message.Id, ));
                                 //                            x.Wait();
