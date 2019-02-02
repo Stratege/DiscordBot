@@ -24,10 +24,10 @@ namespace borkbot
         {
         }
 
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
-            var coms = new List<Tuple<string, Command>>(1);
-            coms.Add(new Tuple<string, Command>("reminder", Command.AdminCommand(this.server, reminderfunc,
+            var coms = new List<Command>(1);
+            coms.Add(Command.AdminCommand(this.server, "reminder", reminderfunc, new HelpMsgStrings("",
                        @"reminder add <name> <channel> <repetition-frequency (in min)> <msg> 
 reminder list
 reminder delete <name>

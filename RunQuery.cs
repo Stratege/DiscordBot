@@ -26,12 +26,12 @@ namespace borkbot
             storage = PersistantList.Create(server, "runquerystorage");
         }
 
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
-            var cmds = new List<Tuple<string, Command>>(2);
-            cmds.Add(new Tuple<string, Command>("getquerysyntax", Command.AdminCommand(server, getQuerySyntax, "getquerysyntax")));
-            cmds.Add(new Tuple<string, Command>("query", Command.AdminCommand(server, query, "query <see getquerysyntax for details. All usage attempts will be logged.>")));
-            cmds.Add(new Tuple<string, Command>("overrideQuery", Command.AdminCommand(server, (e, x) => { int i = int.Parse(x); curMaxMillisecondQueryLength = (i > 0 ? i : 0); },"")));
+            var cmds = new List<Command>(2);
+            cmds.Add(Command.AdminCommand(server, "getquerysyntax", getQuerySyntax, new HelpMsgStrings("", "getquerysyntax")));
+            cmds.Add(Command.AdminCommand(server, "query", query, new HelpMsgStrings("", "query <see getquerysyntax for details. All usage attempts will be logged.>")));
+            cmds.Add(Command.AdminCommand(server, "overrideQuery", (e, x) => { int i = int.Parse(x); curMaxMillisecondQueryLength = (i > 0 ? i : 0); }, new HelpMsgStrings("", "")));
             return cmds;
         }
 

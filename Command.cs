@@ -10,17 +10,55 @@ namespace borkbot
 {
     enum PrivilegeLevel { BotAdmin, Everyone };
 
+    class HelpMsgStrings
+    {
+        string description;
+        string format;
+        List<string> arguments;
+
+        public HelpMsgStrings(string _description, string _format)
+        {
+            description = _description;
+            format = _format;
+            arguments = new List<string>();
+        }
+
+        public HelpMsgStrings addArg(string arg)
+        {
+            arguments.Add(arg);
+            return this;
+        }
+
+        public string getFormat()
+        {
+            return format;
+        }
+
+        public string getDescription()
+        {
+            return description;
+        }
+
+        public List<string> getArguments()
+        {
+            return arguments;
+        }
+
+   }
+
     class Command
     {
         VirtualServer server;
+        public string name;
         PrivilegeLevel priv;
         Action<ServerMessage, string> cmd;
-        public string syntaxmessage;
+        public HelpMsgStrings helpmessage;
 
-        public Command(VirtualServer _server, Action<ServerMessage, string> _cmd, PrivilegeLevel _priv, string _syntaxmessage)
+        public Command(VirtualServer _server, string _name, Action<ServerMessage, string> _cmd, PrivilegeLevel _priv, HelpMsgStrings _helpmessage)
         {
             server = _server;
-            syntaxmessage = _syntaxmessage;
+            name = _name;
+            helpmessage = _helpmessage;
             priv = _priv;
             cmd = _cmd;
         }
@@ -37,14 +75,31 @@ namespace borkbot
 
         }
 
-        private bool checkPrivilege(SocketUser u, ISocketMessageChannel c)
+        public bool checkPrivilege(SocketUser u, ISocketMessageChannel c)
         {
             return (priv == PrivilegeLevel.BotAdmin && server.isAdmin(u,c)) || priv == PrivilegeLevel.Everyone;
         }
 
-        public static Command AdminCommand(VirtualServer _server, Action<ServerMessage, String> _cmd, string _syntaxmessage)
+        public static Command AdminCommand(VirtualServer _server, string _name, Action<ServerMessage, String> _cmd, HelpMsgStrings _helpmessage)
         {
-            return new Command(_server,_cmd, PrivilegeLevel.BotAdmin,_syntaxmessage);
+            return new Command(_server,_name,_cmd, PrivilegeLevel.BotAdmin, _helpmessage);
+        }
+
+        public Discord.Embed getHelpMessageEmbed()
+        {
+            var eb = new Discord.EmbedBuilder().WithAuthor("The Overbork", server.DC.CurrentUser.GetAvatarUrl()).WithCurrentTimestamp();
+            eb.WithTitle(name).WithDescription(helpmessage.getDescription()).AddInlineField("Format", helpmessage.getFormat()).AddInlineField("Permission Required", priv == PrivilegeLevel.Everyone ? "None" : "Bot Admin");
+            var args = helpmessage.getArguments().SelectMany(x => x + "\n").ToArray();
+            eb.AddField("Arguments", args.Length == 0 ? "None" : new String(args));
+            /*            const int maxFieldSize = 1024;
+                        for (int i = 0; i < ((botInfo.Length + (maxFieldSize - 1)) / maxFieldSize); i++)
+                        {
+                            int remLen = botInfo.Length - i * maxFieldSize;
+                            int len = remLen < maxFieldSize ? remLen : maxFieldSize;
+                            eb = eb.AddField("help" + i, botInfo.Substring(i * maxFieldSize, len));
+                        }
+                        safeSendEmbed(e.Channel, eb.Build());*/
+            return eb.Build();
         }
     }
 }

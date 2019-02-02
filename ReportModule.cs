@@ -95,14 +95,14 @@ namespace borkbot
         /// Gets all the available commands from this module into the command list
         /// </summary>
         /// <returns></returns>
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
             var commands = base.getCommands();
-            commands.Add(new Tuple<string, Command>("report", makeEnableableCommand(Report, PrivilegeLevel.Everyone, "report <text>")));
-            commands.Add(new Tuple<string, Command>("setreportchannel", makeEnableableAdminCommand(SetReportChannel, "setreportchannel <channel name>")));
-            commands.Add(new Tuple<string, Command>("reportreply", makeEnableableAdminCommand(Reply, "reportreply <num> <text> - replies to the specified report")));
-            commands.Add(new Tuple<string, Command>("reportban", makeEnableableAdminCommand(Ban, "reportban <num> - bans the reporting user from using the report system")));
-            commands.Add(new Tuple<string, Command>("reportunban", makeEnableableAdminCommand(UnBan, "reportunban <num> - unbans the reporting user from using the report system")));
+            commands.Add(makeEnableableCommand("report", Report, PrivilegeLevel.Everyone, new HelpMsgStrings("", "report <text>")));
+            commands.Add(makeEnableableAdminCommand("setreportchannel", SetReportChannel, new HelpMsgStrings("", "setreportchannel <channel name>")));
+            commands.Add(makeEnableableAdminCommand("reportreply", Reply, new HelpMsgStrings("", "reportreply <num> <text> - replies to the specified report")));
+            commands.Add(makeEnableableAdminCommand("reportban", Ban, new HelpMsgStrings("", "reportban <num> - bans the reporting user from using the report system")));
+            commands.Add(makeEnableableAdminCommand("reportunban", UnBan, new HelpMsgStrings("", "reportunban <num> - unbans the reporting user from using the report system")));
             return commands;
         }
 

@@ -12,12 +12,12 @@ namespace borkbot
         protected WelcomeMessage wmls;
         protected bool on = false;
         private string command;
-        protected string syntaxmessage;
+        protected HelpMsgStrings helpmsgstring;
 
-        public WelcomeMessageCommandHandler(VirtualServer _server, string _command, string _syntaxmessage) : base(_server)
+        public WelcomeMessageCommandHandler(VirtualServer _server, string _command, HelpMsgStrings _helpmsgstring) : base(_server)
         {
             command = _command;
-            syntaxmessage = _syntaxmessage;
+            helpmsgstring = _helpmsgstring;
             string message = String.Join("\n",server.FileSetup(command + ".txt"));
             if (message == String.Empty)
                 wmls = new WelcomeMessage("Welcome " + WelcomeMessageId.raw);
@@ -48,11 +48,11 @@ namespace borkbot
             }
         }
 
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
             
-            var commands = new List<Tuple<string, Command>>(1);
-            commands.Add(new Tuple<string, Command>(command, Command.AdminCommand(server,cmd,syntaxmessage)));
+            var commands = new List<Command>(1);
+            commands.Add(Command.AdminCommand(server, command, cmd, helpmsgstring));
             return commands;
         }
 

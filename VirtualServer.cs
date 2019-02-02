@@ -32,13 +32,13 @@ namespace borkbot
 
     public class VirtualServer
     {
-        String botInfo = "Syntax of this Bot:\n@mention command-name command-parameters\n\nAvailable Commands: \n";
+//        String botInfo = "Syntax of this Bot:\n@mention command-name command-parameters\n\nAvailable Commands: \n";
 
-        static String botFinalInfo = "\nspecial note: In the autogreet/admingreet/adminleave use the string literal '{user}' for the bot to replace that part of the message with a mention of the user who just joined";
+//        static String botFinalInfo = "\nspecial note: In the autogreet/admingreet/adminleave use the string literal '{user}' for the bot to replace that part of the message with a mention of the user who just joined";
 
         internal Dictionary<String, Command> Commandlist;
         SocketGuild server;
-        DiscordSocketClient DC;
+        public DiscordSocketClient DC;
         public PersistantList Admins;
         String adminfilePath = "admins.txt";
         string serverpath;
@@ -55,11 +55,11 @@ namespace borkbot
                 server = _server;
                 Commandlist = new Dictionary<string, Command>();
 
-                var virtualServerCommands = new List<Tuple<String, Command>>(4);
-                virtualServerCommands.Add(Tuple.Create("help", new Command(this, help, PrivilegeLevel.BotAdmin, "help")));
-                virtualServerCommands.Add(Tuple.Create("shutdown", new Command(this, shutdown, PrivilegeLevel.BotAdmin, "shutdown <on/off>")));
-                virtualServerCommands.Add(Tuple.Create("addbotadmin", new Command(this, addBotAdmin, PrivilegeLevel.BotAdmin, "addbotadmin <mention-target>")));
-                virtualServerCommands.Add(Tuple.Create("removebotadmin", new Command(this, removeBotAdmin, PrivilegeLevel.BotAdmin, "removebotadmin <mention-target>")));
+                var virtualServerCommands = new List<Command>(4);
+                virtualServerCommands.Add(new Command(this, "help", help, PrivilegeLevel.BotAdmin, new HelpMsgStrings("", ""))); //help is very very special
+                virtualServerCommands.Add(new Command(this, "shutdown", shutdown, PrivilegeLevel.BotAdmin, new HelpMsgStrings("", "shutdown <on/off>")));
+                virtualServerCommands.Add(new Command(this, "addbotadmin", addBotAdmin, PrivilegeLevel.BotAdmin, new HelpMsgStrings("", "addbotadmin <mention-target>")));
+                virtualServerCommands.Add(new Command(this, "removebotadmin", removeBotAdmin, PrivilegeLevel.BotAdmin, new HelpMsgStrings("", "removebotadmin <mention-target>")));
                 addCommands(virtualServerCommands);
                 Admins = PersistantList.Create(this,adminfilePath);
                 addCommands(new Admingreet(this).getCommands());
@@ -83,8 +83,11 @@ namespace borkbot
                 addCommands(new StrikeModule(this).getCommands());
                 addCommands(new EmoteModule(this).getCommands());
                 addCommands(new ReportModule(this).getCommands());
+                addCommands(new Inktober(this).getCommands());
+                addCommands(new Userinfo(this).getCommands());
+                addCommands(new Someone(this).getCommands());
                 
-                var temp = new List<Tuple<string, Command>>();
+                var temp = new List<Command>();
 /* TODO: Readd?
                 Action<SocketUserMessage,string> f = (x, y) => { try { var chan = server.TextChannels.Where(z => z.Name == y).FirstOrDefault(); chan.GetMessagesAsync(chan.CachedMessages.OrderBy(z => z.Id).Select(z => z.Id).FirstOrDefault(), Discord.Direction.Before, 100).Wait(); } catch (Exception e) { Console.WriteLine(e); } };
                 Action<SocketUserMessage, string> g = async (x, y) => {
@@ -128,12 +131,12 @@ namespace borkbot
                     }
                     Console.WriteLine("invocation complete");
                 };
-//                temp.Add(new Tuple<string, Command>("load", Command.AdminCommand(this, f,"")));
-//                temp.Add(new Tuple<string, Command>("loadNum", Command.AdminCommand(this,g,"")));
-                temp.Add(new Tuple<string, Command>("multicommand", Command.AdminCommand(this, h, "")));
+//                temp.Add("load", Command.AdminCommand(this, f,"")));
+//                temp.Add("loadNum", Command.AdminCommand(this,g,"")));
+                temp.Add(Command.AdminCommand(this, "multicommand", h, new HelpMsgStrings("", "")));
                 addCommands(temp);
 
-                botInfo += botFinalInfo;
+//                botInfo += botFinalInfo;
             }
             catch (Exception e)
             {
@@ -190,7 +193,7 @@ namespace borkbot
             var users = e.msg.MentionedUsers.Where(x => !x.IsBot).Select(x => Tuple.Create(x.Mention, x.Id, x)).ToList();
             var message = "";
             if (!Funcs.validateMentionTarget(e, m))
-                message = "Unable to comply with command. \n\n" + botInfo;
+                message = "Unable to comply with command. \n\n"; //+ botInfo;
             else
             {
                 var m2 = f(users[0].Item1, users[0].Item2, users[0].Item3);
@@ -203,18 +206,18 @@ namespace borkbot
 
 
 
-        void addCommands(List<Tuple<String, Command>> cmdls)
+        void addCommands(List<Command> cmdls)
         {
             foreach (var cmd in cmdls)
             {
                 try
                 {
-                    Commandlist.Add(cmd.Item1.ToLower(), cmd.Item2);
-                    botInfo += cmd.Item2.syntaxmessage + "\n";
+                    Commandlist.Add(cmd.name.ToLower(), cmd);
+//                    botInfo += cmd.Item2.syntaxmessage + "\n";
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Tried to add " + cmd.Item1);
+                    Console.WriteLine("Tried to add " + cmd.name + " but failed.");
                     Console.WriteLine(e);
                 }
             }
@@ -264,12 +267,45 @@ namespace borkbot
         }
 
 
+        bool shouldDisplayHelp(Command com, SocketGuildUser user, ISocketMessageChannel c)
+        {
+            return com.checkPrivilege(user, c) && com.helpmessage.getFormat() != "";
+        }
+
+        string getCommandListForUser(SocketGuildUser user, ISocketMessageChannel c)
+        {
+            var AvailableComs = Commandlist.Where(x => shouldDisplayHelp(x.Value,user,c)).SelectMany(x => x.Key + ", ");
+            var k = AvailableComs.Take(AvailableComs.Count() - 2).ToArray();
+            return new string(k);
+        }
+
         void help(ServerMessage e, String m)
         {
-            safeSendMessage(e.Channel,
-"Standing by for orders, " + e.Author.Username + @"!
+            /*            var eb = new EmbedBuilder();
+                        eb = eb.WithAuthor("The Overbork", this.DC.CurrentUser.GetAvatarUrl()).WithCurrentTimestamp().WithTitle("Help");
+                        const int maxFieldSize = 1024;
+                        for(int i = 0; i < ((botInfo.Length + (maxFieldSize-1)) / maxFieldSize); i++)
+                        {
+                            int remLen = botInfo.Length - i * maxFieldSize;
+                            int len = remLen < maxFieldSize ? remLen : maxFieldSize;
+                            eb = eb.AddField("help" + i, botInfo.Substring(i * maxFieldSize, len));
+                        }
+                        safeSendEmbed(e.Channel, eb.Build());*/
+            /*            safeSendMessage(e.Channel,
+            "Standing by for orders, " + e.Author.Username + @"!
 
-" + botInfo, true);
+            " + botInfo, true);*/
+            var parts = m.Split(" ".ToArray(), StringSplitOptions.RemoveEmptyEntries);
+            Command com;
+            if (parts.Length > 0 && Commandlist.TryGetValue(parts[0],out com) && shouldDisplayHelp(com,e.Author,e.Channel))
+            {
+                safeSendEmbed(e.Channel, com.getHelpMessageEmbed());
+            }else
+            {
+                var eb = new Discord.EmbedBuilder().WithAuthor("The Overbork", this.DC.CurrentUser.GetAvatarUrl()).WithCurrentTimestamp();
+                eb.WithTitle("Available commands").WithDescription("This is a list of all commands currently available to you. For help with a particular command, try !help followed by that command name. ```" + getCommandListForUser(e.Author, e.Channel) + "```");
+                safeSendEmbed(e.Channel, eb.Build());
+            }
         }
 
         internal SocketGuild getServer()
@@ -277,7 +313,12 @@ namespace borkbot
             return server;
         }
 
-        async public Task<Discord.Rest.RestUserMessage> safeSendMessage(IMessageChannel c, string m, bool splitMessage = false)
+        async public Task<Discord.Rest.RestUserMessage> safeSendEmbed(IMessageChannel c, Embed embed)
+        {
+            return await safeSendMessage(c, "", false, embed);
+        }
+
+        async public Task<Discord.Rest.RestUserMessage> safeSendMessage(IMessageChannel c, string m, bool splitMessage = false, Embed embed = null)
         {
             if(c == null)
             {
@@ -318,14 +359,14 @@ namespace borkbot
             {
                 if (stc != null)
                 {
-                    return await stc.SendMessageAsync(m);
+                    return await stc.SendMessageAsync(m, false, embed);
                 }else if(c.GetType() == typeof(SocketDMChannel))
                 {
-                    return await ((SocketDMChannel)c).SendMessageAsync(m);
+                    return await ((SocketDMChannel)c).SendMessageAsync(m,false, embed);
                 }
                 else if (c is RestDMChannel)
                 {
-                    return await ((RestDMChannel)c).SendMessageAsync(m);
+                    return await ((RestDMChannel)c).SendMessageAsync(m,false, embed);
                 }
                 else
                 {
@@ -341,7 +382,7 @@ namespace borkbot
 
         public void messageRecieved(ServerMessage e)
         {
-            if (e.msg.MentionedUsers.Count(x => x.Id == DC.CurrentUser.Id) > 0 || (altCommand.isOn && e.msg.Content.StartsWith(altCommand.alternativeSyntax)))
+            if (!e.Author.IsBot && (e.msg.MentionedUsers.Count(x => x.Id == DC.CurrentUser.Id) > 0 || (altCommand.isOn && e.msg.Content.StartsWith(altCommand.alternativeSyntax))))
             {
                 var res = parseMessage(e.msg.Content);
                 if (res != null)
@@ -350,7 +391,12 @@ namespace borkbot
                 {
                     if (res != null)
                     {
-                        Commandlist[res.Item1].invoke(e, res.Item2);
+                        var payload = res.Item2;
+                        var gc = e.Channel as SocketTextChannel;
+                        if(/*!e.Author.GuildPermissions.MentionEveryone && */ gc != null && !e.Author.GetPermissions(gc).MentionEveryone)
+                            payload = payload.Replace("@everyone", "ATeveryone").Replace("@here", "AThere");
+
+                        Commandlist[res.Item1].invoke(e, payload);
                     }
                 }
                 catch (Exception exp)
@@ -360,6 +406,7 @@ namespace borkbot
             }
             //also call all our things that listen to recieved messages directly
             MessageRecieved.Invoke(this,e);
+
         }
 
         public bool isAdmin(SocketUser user, ISocketMessageChannel channel)

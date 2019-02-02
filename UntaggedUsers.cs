@@ -13,11 +13,11 @@ namespace borkbot
         {
         }
 
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
-            var cmds = new List<Tuple<string, Command>>(2);
-            cmds.Add(new Tuple<string, Command>("getuntagged", Command.AdminCommand(server, getUntagged, "getuntagged")));
-            cmds.Add(new Tuple<string, Command>("getuserswithtag", Command.AdminCommand(server, getWithTag, "getuserswithtag <role>")));
+            var cmds = new List<Command>(2);
+            cmds.Add(Command.AdminCommand(server, "getuntagged", getUntagged, new HelpMsgStrings("","getuntagged")));
+            cmds.Add(Command.AdminCommand(server, "getuserswithtag", getWithTag, new HelpMsgStrings("", "getuserswithtag <role>")));
             return cmds;
         }
 

@@ -10,7 +10,7 @@ namespace borkbot
     abstract class CommandHandler
     {
         protected VirtualServer server;
-        public abstract List<Tuple<String, Command>> getCommands();
+        public abstract List<Command> getCommands();
         public CommandHandler(VirtualServer _server)
         {
             server = _server;

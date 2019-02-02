@@ -9,7 +9,7 @@ namespace borkbot
 {
     class Admingreet : AdminMessageChannel
     {
-        public Admingreet(VirtualServer _server) : base(_server, "admingreet", "admingreet <on/off> <admingreet message>")
+        public Admingreet(VirtualServer _server) : base(_server, "admingreet", new HelpMsgStrings("", "admingreet <on/off> <admingreet message>"))
         {
             server.UserJoined += (s, u) =>
             {
@@ -23,7 +23,7 @@ namespace borkbot
 
     class Adminleave : AdminMessageChannel
     {
-        public Adminleave(VirtualServer _server) : base(_server, "adminleave", "adminleave <on/off> <adminleave message>")
+        public Adminleave(VirtualServer _server) : base(_server, "adminleave", new HelpMsgStrings("", "adminleave <on/off> <adminleave message>"))
         {
             server.UserLeft += (s, u) =>
             {
@@ -40,7 +40,7 @@ namespace borkbot
     {
         protected SocketTextChannel channel;
         private static string savefile = "Adminchannel.txt";
-        public AdminMessageChannel(VirtualServer _server, string command, string _syntaxmessage) : base(_server, command, _syntaxmessage)
+        public AdminMessageChannel(VirtualServer _server, string command, HelpMsgStrings _helpmsgstrings) : base(_server, command, _helpmsgstrings)
         {
             var res = server.FileSetup(savefile);
             if (res.Count > 0)
@@ -49,10 +49,10 @@ namespace borkbot
             }
         }
 
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
             var cmds = base.getCommands();
-            cmds.Add(new Tuple<string, Command>("setadminchannel", Command.AdminCommand(server, setadminchannel, "setadminchannel <channel>")));
+            cmds.Add(Command.AdminCommand(server, "setadminchannel", setadminchannel, new HelpMsgStrings("Sets the channel which", "setadminchannel <channel>").addArg("channel - mandatory arg, name of the channel")));
             return cmds;
         }
 
@@ -78,7 +78,7 @@ namespace borkbot
     {
         protected SocketTextChannel channel;
         private static string savefile = "Lobbychannel.txt";
-        public LobbyGreet(VirtualServer _server) : base(_server, "lobbygreet", "lobbygreet <channel> <on/off> <lobbygreet message>")
+        public LobbyGreet(VirtualServer _server) : base(_server, "lobbygreet", new HelpMsgStrings("", "lobbygreet <channel> <on/off> <lobbygreet message>"))
         {
             var res = server.FileSetup(savefile);
             if (res.Count > 0)
@@ -101,7 +101,7 @@ namespace borkbot
             m = m.Trim();
             var m2 = m.Split(" ".ToArray(), 2, StringSplitOptions.RemoveEmptyEntries);
             if (m2.Length < 2)
-                message = "Syntaxerror. Correct command: " + syntaxmessage;
+                message = "Syntaxerror. Correct command: " + helpmsgstring.getFormat();
             else
             {
                 var chanName = m2[0];

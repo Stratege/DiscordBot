@@ -259,12 +259,12 @@ namespace borkbot
             }
         }
 
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
             var cmds = base.getCommands();
-            cmds.Add(Tuple.Create("proposal", makeEnableableAdminCommand(proposal, "proposal - see proposalsyntax command")));
-            cmds.Add(Tuple.Create("proposalSyntax", makeEnableableAdminCommand(proposalsyntax, "proposalsyntax")));
-            cmds.Add(Tuple.Create("vote", makeEnableableCommand(vote, PrivilegeLevel.Everyone, "vote <ProposalName> <VoteOption>")));
+            cmds.Add(makeEnableableAdminCommand("proposal", proposal, new HelpMsgStrings("", "proposal - see proposalsyntax command")));
+            cmds.Add(makeEnableableAdminCommand("proposalSyntax", proposalsyntax, new HelpMsgStrings("", "proposalsyntax")));
+            cmds.Add(makeEnableableCommand("vote", vote, PrivilegeLevel.Everyone, new HelpMsgStrings("", "vote <ProposalName> <VoteOption>")));
             return cmds;
         }
 

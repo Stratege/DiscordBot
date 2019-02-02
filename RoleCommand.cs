@@ -82,14 +82,14 @@ namespace borkbot
         /// This includes dynamically created commands by role names
         /// </summary>
         /// <returns></returns>
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
             var commands = base.getCommands();
-            commands.Add(new Tuple<string, Command>("role", makeEnableableCommand(ModifyRoles, PrivilegeLevel.Everyone, "role <role name>")));
-            commands.Add(new Tuple<string, Command>("fullaccess", makeEnableableCommand(GrantFullAccess, PrivilegeLevel.Everyone, "fullaccess")));
-            commands.Add(new Tuple<string, Command>("modifywhitelistedrole", makeEnableableAdminCommand(ModifyWhitelistedRole, "modifywhitelistedrole <role name>")));
-            commands.Add(new Tuple<string, Command>("printwhitelistedroles", makeEnableableAdminCommand(PrintWhitelistedRoles, "printwhitelistedroles <role name>")));
-            commands.Add(new Tuple<string, Command>("settimeoutrole", makeEnableableAdminCommand(SetTimeoutRole, "settimeoutrole <role name>")));
+            commands.Add(makeEnableableCommand("role", ModifyRoles, PrivilegeLevel.Everyone, new HelpMsgStrings("", "role <role name>")));
+            commands.Add(makeEnableableCommand("fullaccess", GrantFullAccess, PrivilegeLevel.Everyone, new HelpMsgStrings("", "fullaccess")));
+            commands.Add(makeEnableableAdminCommand("modifywhitelistedrole", ModifyWhitelistedRole, new HelpMsgStrings("", "modifywhitelistedrole <role name>")));
+            commands.Add(makeEnableableAdminCommand("printwhitelistedroles", PrintWhitelistedRoles, new HelpMsgStrings("", "printwhitelistedroles <role name>")));
+            commands.Add(makeEnableableAdminCommand("settimeoutrole", SetTimeoutRole, new HelpMsgStrings("", "settimeoutrole <role name>")));
 
             // Go over all the whitelisted roles to create their own !<role name> commands, to toggle them individually
             foreach (var roleID in WhitelistedRoles)
@@ -99,9 +99,9 @@ namespace borkbot
                 {
                     // We might be trying to add the same command twice, because of roles that share the same first word
                     // For example: Stable Dweller exists, now trying to add Stable Pony.
-                    if (!commands.Any((t) => t.Item1 == GetRoleNameCommand(role.Name)))
+                    if (!commands.Any((t) => t.name == GetRoleNameCommand(role.Name)))
                     {
-                        commands.Add(new Tuple<string, Command>(GetRoleNameCommand(role.Name), new Command(server, ModifyRolesByCommandName, PrivilegeLevel.Everyone, role.Name + " (role command)")));
+                        commands.Add(new Command(server, GetRoleNameCommand(role.Name), ModifyRolesByCommandName, PrivilegeLevel.Everyone, new HelpMsgStrings("", role.Name + " (role command)")));
                     }
                 }
                 else
@@ -218,7 +218,7 @@ namespace borkbot
                     // For example: Stable Dweller exists, now trying to add Stable Pony.
                     if (!server.Commandlist.ContainsKey(GetRoleNameCommand(newRole.Name)))
                     {
-                        server.Commandlist.Add(GetRoleNameCommand(newRole.Name), new Command(server, ModifyRolesByCommandName, PrivilegeLevel.Everyone, ""));
+                        server.Commandlist.Add(GetRoleNameCommand(newRole.Name),new Command(server, GetRoleNameCommand(newRole.Name), ModifyRolesByCommandName, PrivilegeLevel.Everyone, new HelpMsgStrings("","")));
                     }
 
                     Console.WriteLine("The role " + oldRole.Name + " has been updated to the role " + newRole);
@@ -302,7 +302,7 @@ namespace borkbot
                 // For example: Stable Dweller exists, now trying to add Stable Pony.
                 if (!server.Commandlist.ContainsKey(GetRoleNameCommand(specifiedRole.Name)))
                 {
-                    server.Commandlist.Add(GetRoleNameCommand(specifiedRole.Name), new Command(server, ModifyRolesByCommandName, PrivilegeLevel.Everyone, ""));
+                    server.Commandlist.Add(GetRoleNameCommand(specifiedRole.Name),new Command(server, GetRoleNameCommand(specifiedRole.Name), ModifyRolesByCommandName, PrivilegeLevel.Everyone, new HelpMsgStrings("","")));
                 }
 
                 server.safeSendMessage(e.Channel, "The role " + specifiedRole.Name + " has been added to the list of whitelisted roles users could get via the !role command, or by writing !<role name>");

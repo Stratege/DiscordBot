@@ -22,23 +22,23 @@ namespace borkbot
             }
         }
 
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
-            var cmd = new List<Tuple<string, Command>>(2);
-            cmd.Add(new Tuple<string, Command>("enable"+module_name, Command.AdminCommand(server,enableroll, "enable"+module_name+" <on/off>")));
+            var cmd = new List<Command>(2);
+            cmd.Add(Command.AdminCommand(server, "enable" + module_name, enableroll, new HelpMsgStrings("", "enable"+module_name+" <on/off>")));
             return cmd;
         }
 
-        protected Command makeEnableableCommand(Action<ServerMessage,string> cmd, PrivilegeLevel priv, string syntaxmsg)
+        protected Command makeEnableableCommand(string name, Action<ServerMessage,string> cmd, PrivilegeLevel priv, HelpMsgStrings helpmsgstrings)
         {
             Action<ServerMessage, string> f = (x, y) => { if (!on) return; cmd(x, y); };
-            return new Command(server, f, priv, syntaxmsg);
+            return new Command(server, name, f, priv, helpmsgstrings);
         }
 
-        protected Command makeEnableableAdminCommand(Action<ServerMessage, string> cmd, string syntaxmsg)
+        protected Command makeEnableableAdminCommand(string name, Action<ServerMessage, string> cmd, HelpMsgStrings helpmsgstrings)
         {
             Action<ServerMessage, string> f = (x, y) => { if (!on) return; cmd(x, y); };
-            return Command.AdminCommand(server, f, syntaxmsg);
+            return Command.AdminCommand(server, name, f, helpmsgstrings);
         }
 
         private void enableroll(ServerMessage e, string m)

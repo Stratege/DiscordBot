@@ -15,10 +15,10 @@ namespace borkbot
             rnd = new Random();
         }
 
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
             var cmd = base.getCommands();
-            cmd.Add(new Tuple<string, Command>("roll", makeEnableableCommand(roll,PrivilegeLevel.Everyone,"roll XdY")));
+            cmd.Add(makeEnableableCommand("roll",roll,PrivilegeLevel.Everyone,new HelpMsgStrings("", "roll XdY")));
             return cmd;
         }
 

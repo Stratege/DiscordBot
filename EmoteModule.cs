@@ -172,11 +172,11 @@ namespace borkbot
         /// This includes dynamically created commands by role names
         /// </summary>
         /// <returns></returns>
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
             var commands = base.getCommands();
-            commands.Add(new Tuple<string, Command>("printemotestats", makeEnableableAdminCommand(PrintCounter, "printemotestats - prints the emote stats")));
-            commands.Add(new Tuple<string, Command>("resetemotestats", makeEnableableAdminCommand(ResetCounter, "resetemotestats - resets the emote stats")));
+            commands.Add(makeEnableableAdminCommand("printemotestats", PrintCounter, new HelpMsgStrings("", "printemotestats - prints the emote stats")));
+            commands.Add(makeEnableableAdminCommand("resetemotestats", ResetCounter, new HelpMsgStrings("", "resetemotestats - resets the emote stats")));
             return commands;
         }
 

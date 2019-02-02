@@ -9,7 +9,7 @@ namespace borkbot
 {
     class Autogreet : WelcomeMessageCommandHandler
     {
-        public Autogreet(VirtualServer _server) : base(_server, "autogreet", "autogreet <on/off> <autogreet message>")
+        public Autogreet(VirtualServer _server) : base(_server, "autogreet", new HelpMsgStrings("", "autogreet <on/off> <autogreet message>"))
         {
             server.UserJoined += async (s, u) =>
             {

@@ -13,10 +13,10 @@ namespace borkbot
         {
         }
 
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
-            var ret = new List<Tuple<string, Command>>(1);
-            ret.Add(new Tuple<string, Command>("shitlist", Command.AdminCommand(server, shitlist, "")));
+            var ret = new List<Command>(1);
+            ret.Add(Command.AdminCommand(server, "shitlist", shitlist, new HelpMsgStrings("","")));
             return ret;
         }
 

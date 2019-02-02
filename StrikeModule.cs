@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
+
 
 namespace borkbot
 {
@@ -20,6 +22,9 @@ namespace borkbot
         private SocketTextChannel _strikeChannel;
 
         private string _channelFile = "StrikeChannel.txt";
+
+        private uint daysTillAutoresolve;
+        private string daysTillAutoresolveFile = "StrikeAutoresolve.txt";
 
         #endregion
 
@@ -69,6 +74,14 @@ namespace borkbot
             {
                 StrikeChannel = server.getServer().TextChannels.FirstOrDefault(x => x.Name == res[0]);
             }
+            var time = server.FileSetup(daysTillAutoresolveFile);
+            if(time.Count == 1 && UInt32.TryParse(time[0],out daysTillAutoresolve))
+            {
+                cleanupStrikes();
+            }else
+            {
+                daysTillAutoresolve = 0;
+            }
         }
 
         #endregion
@@ -78,19 +91,75 @@ namespace borkbot
         /// This includes dynamically created commands by role names
         /// </summary>
         /// <returns></returns>
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
             var commands = base.getCommands();
-            commands.Add(new Tuple<string, Command>("strike", makeEnableableAdminCommand(StrikeUser, "strike <user tag> <reason>")));
-            commands.Add(new Tuple<string, Command>("setstrikechannel", makeEnableableAdminCommand(SetStrikeChannel, "setstrikechannel <channel name>")));
-            commands.Add(new Tuple<string, Command>("printallstrikes", makeEnableableAdminCommand(PrintAllStrikes, "printallstrikes")));
-            commands.Add(new Tuple<string, Command>("resolveallstrikes", makeEnableableAdminCommand(ResolveAllStrikes, "resolveallstrikes")));
-            commands.Add(new Tuple<string, Command>("resolvestrike", makeEnableableAdminCommand(ResolveStrike, "resolvestrike <user tag> <strike number> <reason>")));
-            commands.Add(new Tuple<string, Command>("printstrikes", makeEnableableCommand(PrintStrikes, PrivilegeLevel.Everyone, "printstrikes")));
+            commands.Add(makeEnableableAdminCommand("strike", StrikeUser, new HelpMsgStrings("", "strike <user tag> <reason>")));
+            commands.Add(makeEnableableAdminCommand("setstrikechannel", SetStrikeChannel, new HelpMsgStrings("", "setstrikechannel <channel name>")));
+            commands.Add(makeEnableableAdminCommand("printallstrikes", PrintAllStrikes, new HelpMsgStrings("lists all unresolved strikes by default, if one adds \"all\" as a param it lists even the resolved ones", "printallstrikes <optional:\"all\">")));
+            commands.Add(makeEnableableAdminCommand("resolveallstrikes", ResolveAllStrikes, new HelpMsgStrings("", "resolveallstrikes")));
+            commands.Add(makeEnableableAdminCommand("resolvestrike", ResolveStrike, new HelpMsgStrings("", "resolvestrike <user tag> <strike number> <reason>")));
+            commands.Add(makeEnableableAdminCommand("setautoresolvetime", SetAutoResolveTime, new HelpMsgStrings("sets the time after which a strike gets automatically marked as resolved", "setautoresolvetime <number as days>")));
+            commands.Add(makeEnableableCommand("printstrikes", PrintStrikes, PrivilegeLevel.Everyone, new HelpMsgStrings("", "printstrikes")));
             return commands;
         }
 
+        private void cleanupStrikes()
+        {
+            if (daysTillAutoresolve == 0)
+                return;
+            var resolveTime = DateTimeOffset.Now - TimeSpan.FromDays(daysTillAutoresolve);
+            var resolveString = "Autoresolve after " + daysTillAutoresolve.ToString() + " days.";
+            foreach (var userId in UserStrikes.Keys)
+            {
+                foreach (var strike in UserStrikes[userId].Where((s) => !s.Resolved && s._strikeDate < resolveTime))
+                {
+                    strike.Resolved = true;
+                    strike.ResolveReason = resolveString;
+                }
+            }
+            UserStrikes.persist();
+            Timer t = new Timer((TimeSpan.FromDays(daysTillAutoresolve)).TotalMilliseconds);
+            var daysOld = daysTillAutoresolve;
+            t.Elapsed += (a, b) =>
+            {
+                if (t != null)
+                {
+                    t.Stop();
+                    t.Dispose();
+                }
+                if(daysOld == daysTillAutoresolve) //only restarts timer if nothing else has been messing with this
+                    cleanupStrikes();
+            };
+            t.AutoReset = false;
+            t.Start();
+
+        }
+
         #region Admin Commands
+
+        private void SetAutoResolveTime(ServerMessage e, string msg)
+        {
+            uint days;
+            if(UInt32.TryParse(msg, out days))
+            {
+                if (days == daysTillAutoresolve)
+                {
+                    server.safeSendMessage(e.Channel, "period was already at " + daysTillAutoresolve + " days");
+                }
+                else
+                {
+                    daysTillAutoresolve = days;
+                    server.fileCommand(_channelFile, x => System.IO.File.WriteAllText(x, daysTillAutoresolve.ToString()));
+                    if (daysTillAutoresolve > 0)
+                        cleanupStrikes();
+                    server.safeSendMessage(e.Channel, "successfully set period to " + daysTillAutoresolve + " days");
+                }
+            }else
+            {
+                server.safeSendMessage(e.Channel, "unable to parse daycount");
+            }
+        }
 
         /// <summary>
         /// Resolves a specific strike
@@ -259,18 +328,26 @@ namespace borkbot
             if (!on)
                 return;
 
+            bool listResolved = message == "all";
             string allStrikes = "Here are the following strikes for the following users:\n";
 
             // Go over all the users with strikes
             foreach (var userID in UserStrikes.Keys)
             {
+                var strikes = UserStrikes[userID];
+                if(!listResolved)
+                {
+                    strikes = strikes.Where(x => !x.Resolved).ToList();
+                    if (strikes.Count() == 0)
+                        continue;
+                }
                 var user = server.getServer().GetUser(userID);
                 var userName = user?.Nickname ?? user?.Username ?? userID.ToString();
 
                 allStrikes += "**__" + userName + ":__**\n";
 
                 // Go over all the strikes for each user
-                allStrikes += PrintStrikesNicely(UserStrikes[userID]);
+                allStrikes += PrintStrikesNicely(strikes);
             }
 
             server.safeSendMessage(e.Channel, allStrikes, true);
@@ -349,7 +426,7 @@ namespace borkbot
     {
         #region Data Members
 
-        private DateTimeOffset _strikeDate;
+        public DateTimeOffset _strikeDate;
 
         private string _reason;
 

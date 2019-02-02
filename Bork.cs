@@ -82,12 +82,12 @@ namespace borkbot
             };
         }
 
-        public override List<Tuple<string, Command>> getCommands()
+        public override List<Command> getCommands()
         {
-            var commands = new List<Tuple<string, Command>>(2);
-            commands.Add(new Tuple<string, Command>("bork", Command.AdminCommand(server,bork, "bork <mention-target> <emoticon> <on/off>")));
-            commands.Add(new Tuple<string, Command>("getborks", Command.AdminCommand(server,getborks, "getborks")));
-            commands.Add(new Tuple<string, Command>("setborkfrequency", Command.AdminCommand(server,setborkfrequency, "setborkfrequency <Integer>")));
+            var commands = new List<Command>(3);
+            commands.Add(Command.AdminCommand(server,"bork",bork, new HelpMsgStrings("","bork <mention-target> <emoticon> <on/off>")));
+            commands.Add(Command.AdminCommand(server, "getborks", getborks, new HelpMsgStrings("", "getborks")));
+            commands.Add(Command.AdminCommand(server, "setborkfrequency", setborkfrequency, new HelpMsgStrings("", "setborkfrequency <Integer>")));
             return commands;
         }
 
