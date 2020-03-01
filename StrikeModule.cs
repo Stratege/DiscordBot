@@ -95,6 +95,7 @@ namespace borkbot
         {
             var commands = base.getCommands();
             commands.Add(makeEnableableAdminCommand("strike", StrikeUser, new HelpMsgStrings("", "strike <user tag> <reason>")));
+            commands.Add(makeEnableableAdminCommand("warning", StrikeUser, new HelpMsgStrings("", "warning <user tag> <reason>")));
             commands.Add(makeEnableableAdminCommand("setstrikechannel", SetStrikeChannel, new HelpMsgStrings("", "setstrikechannel <channel name>")));
             commands.Add(makeEnableableAdminCommand("printallstrikes", PrintAllStrikes, new HelpMsgStrings("lists all unresolved strikes by default, if one adds \"all\" as a param it lists even the resolved ones", "printallstrikes <optional:\"all\">")));
             commands.Add(makeEnableableAdminCommand("resolveallstrikes", ResolveAllStrikes, new HelpMsgStrings("", "resolveallstrikes")));
@@ -304,13 +305,18 @@ namespace borkbot
                     UserStrikes.persist();
 
                     // Alert for 3 or more unresolved strikes
-                    if (UserStrikes[user.Id].Count((s) => !s.Resolved) >= 3)
+                    if (UserStrikes[user.Id].Count((s) => !s.Resolved) >= 4)
                     {
                         server.safeSendMessage(StrikeChannel, server.getServer().EveryoneRole + " " + userName + " has been given their third (or more) strike in " + (e.Channel as SocketTextChannel).Mention + ".\n Reason: " + strike.Reason);
                     }
                 }
-
-                server.safeSendMessage(e.Channel, "The user " + userName + " has been given a strike for the following reason: " + split[1]);
+                if (UserStrikes[user.Id].Count((s) => !s.Resolved) >= 2)
+                {
+                    server.safeSendMessage(e.Channel, "The user " + userName + " has been given a strike for the following reason: " + split[1]);
+                }else
+                {
+                    server.safeSendMessage(e.Channel, "The user " + userName + "has been given a warning for the following reason: " + split[1]);
+                }
             }
             else
             {
@@ -377,7 +383,7 @@ namespace borkbot
                 channel = e.Author.GetOrCreateDMChannelAsync().Result as SocketDMChannel;
 
                 // Print the appropriate response
-                if (!UserStrikes.ContainsKey(e.Author.Id))
+                if (!UserStrikes.ContainsKey(e.Author.Id) || UserStrikes[e.Author.Id].Count((s) => !s.Resolved) == 0)
                 {
 
                     server.safeSendMessage(channel, "You do not have any strikes at the present moment.\nGood job! Please continue to be kind, unwavering, and awesome!");
