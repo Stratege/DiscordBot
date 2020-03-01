@@ -62,10 +62,13 @@ namespace borkbot
                 virtualServerCommands.Add(new Command(this, "removebotadmin", removeBotAdmin, PrivilegeLevel.BotAdmin, new HelpMsgStrings("", "removebotadmin <mention-target>")));
                 addCommands(virtualServerCommands);
                 Admins = PersistantList.Create(this,adminfilePath);
-                addCommands(new Admingreet(this).getCommands());
-                addCommands(new Adminleave(this).getCommands());
+                var adminChannel = new AdminMessageChannel(this);
+                addCommands(adminChannel.getCommands());
+                addCommands(new Admingreet(this, adminChannel).getCommands());
+                addCommands(new Adminleave(this, adminChannel).getCommands());
                 addCommands(new Autogreet(this).getCommands());
-                addCommands(new LobbyGreet(this).getCommands());
+                var lobbyGreet = new LobbyGreet(this);
+                addCommands(lobbyGreet.getCommands());
                 addCommands(new Dice(this).getCommands());
                 addCommands(new Roulette(this).getCommands());
                 addCommands(new Echo(this).getCommands());
@@ -79,13 +82,14 @@ namespace borkbot
                 altCommand = new AlternativeCommand(this);
                 addCommands(altCommand.getCommands());
                 addCommands(new GloriousDirectDemocracy(this).getCommands());
-                addCommands(new RoleCommand(this, DC).getCommands());
+                addCommands(new RoleCommand(this, lobbyGreet).getCommands());
                 addCommands(new StrikeModule(this).getCommands());
                 addCommands(new EmoteModule(this).getCommands());
                 addCommands(new ReportModule(this).getCommands());
                 addCommands(new Inktober(this).getCommands());
                 addCommands(new Userinfo(this).getCommands());
                 addCommands(new Someone(this).getCommands());
+                addCommands(new Move(this).getCommands());
                 
                 var temp = new List<Command>();
 /* TODO: Readd?
@@ -145,6 +149,8 @@ namespace borkbot
 
             Console.WriteLine("Connected with server: " + server.Name);
         }
+
+
 
         public void updateServer(SocketGuild newS)
         {
@@ -231,6 +237,8 @@ namespace borkbot
         internal EventHandler<Tuple<SocketGuildUser, SocketGuildUser>> UserUpdated;
         internal EventHandler<SocketReaction> ReactionAdded;
         internal EventHandler<SocketReaction> ReactionRemoved;
+        internal EventHandler<Tuple<SocketRole, SocketRole>> RoleUpdated;
+        internal EventHandler<SocketRole> RoleDeleted;
 
         public void reactionAdded(SocketReaction reaction)
         {
@@ -255,6 +263,16 @@ namespace borkbot
         internal void userUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
         {
             UserUpdated.Invoke(this, Tuple.Create(oldUser,newUser));
+        }
+
+        internal void roleUpdated(SocketRole oldRole, SocketRole newRole)
+        {
+            RoleUpdated.Invoke(this, Tuple.Create(oldRole,newRole));
+        }
+
+        internal void roleDeleted(SocketRole role)
+        {
+            RoleDeleted.Invoke(this, role);
         }
 
         void shutdown(ServerMessage e, String m)
