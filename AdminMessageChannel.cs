@@ -7,40 +7,44 @@ using Discord.WebSocket;
 
 namespace borkbot
 {
-    class Admingreet : AdminMessageChannel
+    class Admingreet : WelcomeMessageCommandHandler
     {
-        public Admingreet(VirtualServer _server) : base(_server, "admingreet", new HelpMsgStrings("", "admingreet <on/off> <admingreet message>"))
+        public Admingreet(VirtualServer _server, AdminMessageChannel amc) : base(_server, "admingreet", new HelpMsgStrings("", "admingreet <on/off> <admingreet message>"))
         {
+            if (amc == null || !amc.sameServer(this.server))
+                throw new Exception("setup error");
             server.UserJoined += (s, u) =>
             {
-                if (on && u.Guild.Id == server.getServer().Id && channel != null)
+                if (on && u.Guild.Id == server.getServer().Id && amc.channel != null)
                 {
-                    server.safeSendMessage(channel, wmls.Response(u));
+                    server.safeSendMessage(amc.channel, wmls.Response(u));
                 }
             };
         }
     }
 
-    class Adminleave : AdminMessageChannel
+    class Adminleave : WelcomeMessageCommandHandler
     {
-        public Adminleave(VirtualServer _server) : base(_server, "adminleave", new HelpMsgStrings("", "adminleave <on/off> <adminleave message>"))
+        public Adminleave(VirtualServer _server, AdminMessageChannel amc) : base(_server, "adminleave", new HelpMsgStrings("", "adminleave <on/off> <adminleave message>"))
         {
+            if (amc == null || !amc.sameServer(this.server))
+                throw new Exception("setup error");
             server.UserLeft += (s, u) =>
             {
-                if (on && channel != null)
+                if (on && amc.channel != null)
                 {
-                    server.safeSendMessage(channel, wmls.Response(u));
+                    server.safeSendMessage(amc.channel, wmls.Response(u));
                 }
             };
         }
     }
 
 
-    class AdminMessageChannel : WelcomeMessageCommandHandler
+    class AdminMessageChannel : CommandHandler
     {
-        protected SocketTextChannel channel;
+        public SocketTextChannel channel;
         private static string savefile = "Adminchannel.txt";
-        public AdminMessageChannel(VirtualServer _server, string command, HelpMsgStrings _helpmsgstrings) : base(_server, command, _helpmsgstrings)
+        public AdminMessageChannel(VirtualServer _server) : base(_server)
         {
             var res = server.FileSetup(savefile);
             if (res.Count > 0)
@@ -51,7 +55,7 @@ namespace borkbot
 
         public override List<Command> getCommands()
         {
-            var cmds = base.getCommands();
+            var cmds = new List<Command>();
             cmds.Add(Command.AdminCommand(server, "setadminchannel", setadminchannel, new HelpMsgStrings("Sets the channel which", "setadminchannel <channel>").addArg("channel - mandatory arg, name of the channel")));
             return cmds;
         }
@@ -95,6 +99,8 @@ namespace borkbot
             };
         }
         
+        public SocketTextChannel getChannel() { return channel; }
+
         protected override void cmd(ServerMessage e, string m)
         {
             string message;
