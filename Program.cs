@@ -104,6 +104,15 @@ namespace borkbot
                  }
              });
 
+            DC.RoleUpdated += async (oldRole, newRole) =>
+            await Task.Run(() => {
+                servers[oldRole.Guild.Id].roleUpdated(oldRole, newRole);
+            });
+            DC.RoleDeleted += async (role) =>
+            await Task.Run(() => {
+                servers[role.Guild.Id].roleDeleted(role);
+            });
+
             bool firstSetup = true;
             DC.Ready += async () =>
             {
@@ -145,6 +154,7 @@ namespace borkbot
             DC.Log += (msg) =>
             {
                 Console.WriteLine("Log Message: " + msg);
+                Console.WriteLine("test: " + msg.Message);
                 if (msg.Message.ToLower() == "failed to resume previous session")
                 {
                     //we just, you know, quit

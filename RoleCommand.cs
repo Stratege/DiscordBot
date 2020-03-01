@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace borkbot
 {
+
     /// <summary>
     /// Represents the role modules, made to allow users to grant/remove their roles
     /// </summary>
@@ -22,6 +23,9 @@ namespace borkbot
         private string _timeoutFile = "TimeoutRole.txt";
 
         private SocketRole _timeoutRole;
+
+        private LobbyGreet lg;
+        bool lssOn = true;
 
         #endregion
 
@@ -61,17 +65,25 @@ namespace borkbot
         /// Initializes the whitelisted roles from the file
         /// </summary>
         /// <param name="_server"></param>
-        public RoleCommand(VirtualServer _server, DiscordSocketClient _dc) : base(_server, "role")
+        public RoleCommand(VirtualServer _server, LobbyGreet _lg) : base(_server, "role")
         {
             WhitelistedRoles = PersistantList.Create(server, "WhitelistedRoles.txt");
-            _dc.RoleUpdated += _dc_RoleUpdated;
-            _dc.RoleDeleted += _dc_RoleDeleted;
-
+            server.RoleUpdated += (s,tup) => roleUpdated(tup.Item1,tup.Item2);
+            server.RoleDeleted += (s,r) => roleDeleted(r);
             // Get the strike channel to print admin alerts in
             var res = server.FileSetup(_timeoutFile);
             if (res.Count > 0)
             {
                 TimeoutRole = server.getServer().Roles.FirstOrDefault(x => x.Name == res[0]);
+            }
+            lg = _lg;
+            if(lg != null)
+            {
+                string statusString = String.Join("\n", server.FileSetup("lobbyselfserviceenableStatus.txt"));
+                if (statusString == "off")
+                {
+                    lssOn = false;
+                }
             }
         }
 
@@ -90,7 +102,10 @@ namespace borkbot
             commands.Add(makeEnableableAdminCommand("modifywhitelistedrole", ModifyWhitelistedRole, new HelpMsgStrings("", "modifywhitelistedrole <role name>")));
             commands.Add(makeEnableableAdminCommand("printwhitelistedroles", PrintWhitelistedRoles, new HelpMsgStrings("", "printwhitelistedroles <role name>")));
             commands.Add(makeEnableableAdminCommand("settimeoutrole", SetTimeoutRole, new HelpMsgStrings("", "settimeoutrole <role name>")));
-
+            if(lg != null)
+            {
+                commands.Add(makeEnableableAdminCommand("lobbyselfservice", lobbyselfservice, new HelpMsgStrings("sets wether or not people in the lobby channel set by lobbygreet can use this module or not", "lobbyselfservice <on/off>")));
+            }
             // Go over all the whitelisted roles to create their own !<role name> commands, to toggle them individually
             foreach (var roleID in WhitelistedRoles)
             {
@@ -113,6 +128,47 @@ namespace borkbot
 
             return commands;
         }
+        //ugly code copy from EnableableCommandModule
+        private void lobbyselfservice(ServerMessage e, string m)
+        {
+            m = m.Trim();
+            if (m == "on")
+            {
+                if (lssOn)
+                {
+                    server.safeSendMessage(e.Channel, "Lobbyselfservice was already enabled.");
+                }
+                else
+                {
+                    lssOn = true;
+                    server.safeSendMessage(e.Channel, "Enabled lobbyselfservice");
+                    persistLSSState();
+                }
+            }
+            else if (m == "off")
+            {
+                if (lssOn)
+                {
+                    lssOn = false;
+                    server.safeSendMessage(e.Channel, "Disabled lobbyselfservice");
+                    persistLSSState();
+                }
+                else
+                {
+                    server.safeSendMessage(e.Channel, "Lobbyselfservice was already disabled.");
+                }
+            }
+            else
+            {
+                server.safeSendMessage(e.Channel, "Lobbyselfservice is currently " + (lssOn ? "enabled" : "disabled") + ".");
+            }
+        }
+
+        private void persistLSSState()
+        {
+            server.fileCommand("lobbyselfserviceenableStatus.txt", x => System.IO.File.WriteAllText(x, (on ? "on" : "off")));
+        }
+
 
         /// <summary>
         /// Because commands can only be one word, it makes it a bit difficult when we want to be able to toggle roles using !<role name> if roles can be several words long
@@ -163,27 +219,26 @@ namespace borkbot
         /// </summary>
         /// <param name="deletedRole"></param>
         /// <returns></returns>
-        private Task _dc_RoleDeleted(SocketRole deletedRole)
+        private void roleDeleted(SocketRole deletedRole)
         {
-            return Task.Run(() =>
+            // If the deleted role is from this server and is whitelisted, properly remove it from all lists
+            if (WhitelistedRoles.Contains(deletedRole.Id.ToString()))
             {
-                // If the deleted role is from this server and is whitelisted, properly remove it from all lists
-                if (deletedRole.Guild.Id == server.getServer().Id && WhitelistedRoles.Contains(deletedRole.Id.ToString()))
+                string deletedRoleName = GetRoleNameCommand(deletedRole.Name);
+
+                // Remove the old role from the list so we can check if there are other roles with the same name
+                //if it was never in, we can stop here
+                if (!WhitelistedRoles.Remove(deletedRole.Id.ToString()))
+                    return;
+
+                // If none exist with the same name, we can safely remove the command
+                if (WhitelistedRoles.All((id) => GetRoleNameCommand(GetRoleByID(id)?.Name) != deletedRoleName))
                 {
-                    string deletedRoleName = GetRoleNameCommand(deletedRole.Name);
-
-                    // Remove the old role from the list so we can check if there are other roles with the same name
-                    WhitelistedRoles.Remove(deletedRole.Id.ToString());
-
-                    // If none exist with the same name, we can safely remove the command
-                    if (WhitelistedRoles.All((id) => GetRoleNameCommand(GetRoleByID(id)?.Name) != deletedRoleName))
-                    {
-                        server.Commandlist.Remove(deletedRoleName);
-                    }
-
-                    Console.WriteLine("The role " + deletedRole.Name + " was deleted, updated its whitelist/commandlist standings");
+                    server.Commandlist.Remove(deletedRoleName);
                 }
-            });
+
+                Console.WriteLine("The role " + deletedRole.Name + " was deleted, updated its whitelist/commandlist standings");
+            }
         }
 
         /// <summary>
@@ -193,37 +248,34 @@ namespace borkbot
         /// <param name="oldRole"></param>
         /// <param name="newRole"></param>
         /// <returns></returns>
-        private Task _dc_RoleUpdated(SocketRole oldRole, SocketRole newRole)
+        private void roleUpdated(SocketRole oldRole, SocketRole newRole)
         {
-            return Task.Run(() =>
+            // If the role updated was in the whitelist and the name was updated, update the commandlist
+            if (WhitelistedRoles.Contains(oldRole.Id.ToString()) && oldRole.Name != newRole.Name)
             {
-                // If the role updated was from this server, in the whitelist, and the name was updated, update the commandlist
-                if (oldRole.Guild.Id == server.getServer().Id && WhitelistedRoles.Contains(oldRole.Id.ToString()) && oldRole.Name != newRole.Name)
+                string oldRoleName = GetRoleNameCommand(oldRole.Name);
+
+                // Remove the old role from the list so we can check if there are other roles with the same name
+                WhitelistedRoles.Remove(oldRole.Id.ToString());
+
+                // If none exist with the same name, we can safely remove the command
+                if (WhitelistedRoles.All((id) => GetRoleNameCommand(GetRoleByID(id)?.Name) != oldRoleName))
                 {
-                    string oldRoleName = GetRoleNameCommand(oldRole.Name);
-
-                    // Remove the old role from the list so we can check if there are other roles with the same name
-                    WhitelistedRoles.Remove(oldRole.Id.ToString());
-
-                    // If none exist with the same name, we can safely remove the command
-                    if (WhitelistedRoles.All((id) => GetRoleNameCommand(GetRoleByID(id)?.Name) != oldRoleName))
-                    {
-                        server.Commandlist.Remove(oldRoleName);
-                    }
-
-                    // Readding the role because the ID didn't change, and it was just for the check above
-                    WhitelistedRoles.Add(oldRole.Id.ToString());
-
-                    // We might be trying to add the same command twice, because of roles that share the same first word
-                    // For example: Stable Dweller exists, now trying to add Stable Pony.
-                    if (!server.Commandlist.ContainsKey(GetRoleNameCommand(newRole.Name)))
-                    {
-                        server.Commandlist.Add(GetRoleNameCommand(newRole.Name),new Command(server, GetRoleNameCommand(newRole.Name), ModifyRolesByCommandName, PrivilegeLevel.Everyone, new HelpMsgStrings("","")));
-                    }
-
-                    Console.WriteLine("The role " + oldRole.Name + " has been updated to the role " + newRole);
+                    server.Commandlist.Remove(oldRoleName);
                 }
-            });
+
+                // Readding the role because the ID didn't change, and it was just for the check above
+                WhitelistedRoles.Add(oldRole.Id.ToString());
+
+                // We might be trying to add the same command twice, because of roles that share the same first word
+                // For example: Stable Dweller exists, now trying to add Stable Pony.
+                if (!server.Commandlist.ContainsKey(GetRoleNameCommand(newRole.Name)))
+                {
+                    server.Commandlist.Add(GetRoleNameCommand(newRole.Name),new Command(server, GetRoleNameCommand(newRole.Name), ModifyRolesByCommandName, PrivilegeLevel.Everyone, new HelpMsgStrings("","")));
+                }
+
+                Console.WriteLine("The role " + oldRole.Name + " has been updated to the role " + newRole);
+            }
         }
 
         #endregion
@@ -328,6 +380,11 @@ namespace borkbot
 
         #region User Commands
 
+        bool mayNotAccessRoleCommands(ServerMessage e)
+        {
+            return (!lssOn && lg != null && lg.getChannel() != null && lg.getChannel().Id == e.Channel.Id) || TimeoutRole.Members.Any((u) => u.Id == e.Author.Id);
+        }
+
         /// <summary>
         /// Grants all current available 
         /// </summary>
@@ -335,7 +392,7 @@ namespace borkbot
         /// <param name="message"></param>
         private void GrantFullAccess(ServerMessage e, string message)
         {
-            if (!on || TimeoutRole.Members.Any((u) => u.Id == e.Author.Id))
+            if (mayNotAccessRoleCommands(e))
                 return;
 
             foreach (var roleID in WhitelistedRoles)
@@ -358,7 +415,7 @@ namespace borkbot
         /// <param name="commandRoleName"></param>
         private void ModifyRolesByCommandName(ServerMessage e, string message)
         {
-            if (!on || TimeoutRole.Members.Any((u) => u.Id == e.Author.Id))
+            if (mayNotAccessRoleCommands(e))
                 return;
 
             var command = server.parseMessageString(e.msg.Content);
@@ -380,7 +437,7 @@ namespace borkbot
         /// <param name="roleName"></param>
         private void ModifyRoles(ServerMessage e, string roleName)
         {
-            if (!on || TimeoutRole.Members.Any((u) => u.Id == e.Author.Id))
+            if (mayNotAccessRoleCommands(e))
                 return;
 
             // Help!
