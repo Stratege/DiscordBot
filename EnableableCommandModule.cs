@@ -25,7 +25,7 @@ namespace borkbot
         public override List<Command> getCommands()
         {
             var cmd = new List<Command>(2);
-            cmd.Add(Command.AdminCommand(server, "enable" + module_name, enableroll, new HelpMsgStrings("", "enable"+module_name+" <on/off>")));
+            cmd.Add(Command.AdminCommand(server, "enable" + module_name, enablerole, new HelpMsgStrings("", "enable"+module_name+" <on/off>")));
             return cmd;
         }
 
@@ -37,11 +37,11 @@ namespace borkbot
 
         protected Command makeEnableableAdminCommand(string name, Action<ServerMessage, string> cmd, HelpMsgStrings helpmsgstrings)
         {
-            Action<ServerMessage, string> f = (x, y) => { if (!on) return; cmd(x, y); };
+            Action<ServerMessage, string> f = (x, y) => { if (!on) { server.safeSendMessage(x.Channel,module_name + " module is not enabled."); return; }; cmd(x, y); };
             return Command.AdminCommand(server, name, f, helpmsgstrings);
         }
 
-        private void enableroll(ServerMessage e, string m)
+        private void enablerole(ServerMessage e, string m)
         {
             if (m == "on")
             {
