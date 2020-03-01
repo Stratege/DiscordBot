@@ -355,7 +355,11 @@ namespace borkbot
                 if (prim.channel != null)
                     var = prim.channel.Name;
                 if (prim.user != null)
+                {
                     var = prim.user.Nickname;
+                    if (var == null)
+                        var = prim.user.Username;
+                }
                 if (prim.role != null)
                     var = prim.role.Name;
                 if (var == null)
@@ -475,7 +479,7 @@ namespace borkbot
                 return new QueryPrimObj(var.Select(x => package(x)));
             }
 
-            public static Func<QueryPrimObj, QueryPrimObj, QueryPrimObj> PrimObjBinOpHelper<J>(Func<Nullable<bool>, Nullable<bool>, J> f1, Func<BuiltInFuncObj, BuiltInFuncObj, J> f2, Func<ISocketMessageChannel, ISocketMessageChannel, J> f3, Func<FuncObj, FuncObj, J> f4, Func<Nullable<ulong>, Nullable<ulong>, J> f5, Func<IEnumerable<QueryPrimObj>, IEnumerable<QueryPrimObj>, J> f6, Func<SocketRole, SocketRole, J> f7, Func<SocketGuild, SocketGuild, J> f8, Func<String, String, J> f9, Func<Tuple<QueryPrimObj, QueryPrimObj>, Tuple<QueryPrimObj, QueryPrimObj>, J> f10, Func<SocketGuildUser, SocketGuildUser, J> f11, Func<SocketMessage, SocketMessage, J> f12)
+            public static Func<QueryPrimObj, QueryPrimObj, QueryPrimObj> PrimObjBinOpHelper<J>(Func<Nullable<bool>, Nullable<bool>, J> f1, Func<BuiltInFuncObj, BuiltInFuncObj, J> f2, Func<SocketGuildChannel, SocketGuildChannel, J> f3, Func<FuncObj, FuncObj, J> f4, Func<Nullable<ulong>, Nullable<ulong>, J> f5, Func<IEnumerable<QueryPrimObj>, IEnumerable<QueryPrimObj>, J> f6, Func<SocketRole, SocketRole, J> f7, Func<SocketGuild, SocketGuild, J> f8, Func<String, String, J> f9, Func<Tuple<QueryPrimObj, QueryPrimObj>, Tuple<QueryPrimObj, QueryPrimObj>, J> f10, Func<SocketGuildUser, SocketGuildUser, J> f11, Func<SocketMessage, SocketMessage, J> f12)
             {
                 return (x, y) =>
                 {
@@ -510,7 +514,7 @@ namespace borkbot
 
             public static QueryPrimObj PrimEq(QueryPrimObj x, QueryPrimObj y)
             {
-                return PrimObjBinOpHelper((a, b) => (a.Equals(b)), BuiltInFuncObj.Equals, ISocketMessageChannel.Equals, FuncObj.Equals, (a, b) => (a.Equals(b)), IEnumerable<QueryPrimObj>.Equals, SocketRole.Equals, SocketGuild.Equals, string.Equals, Tuple<QueryPrimObj, QueryPrimObj>.Equals, SocketGuildUser.Equals, SocketMessage.Equals)(x, y);
+                return PrimObjBinOpHelper((a, b) => (a.Equals(b)), BuiltInFuncObj.Equals, SocketGuildChannel.Equals, FuncObj.Equals, (a, b) => (a.Equals(b)), IEnumerable<QueryPrimObj>.Equals, SocketRole.Equals, SocketGuild.Equals, string.Equals, Tuple<QueryPrimObj, QueryPrimObj>.Equals, SocketGuildUser.Equals, SocketMessage.Equals)(x, y);
             }
 
             public static QueryPrimObj PrimNEq(QueryPrimObj x, QueryPrimObj y)
@@ -681,7 +685,7 @@ namespace borkbot
             addAssocIgnoringFunc("neg", InternalFuncs.Negate);
             addAssocIgnoringFunc("negate", (FuncMaker<int, int>(x => -x)));
             builtinList.Add(new Tuple<string, QueryObj>("server", new QueryObj(new QueryPrimObj(s.getServer()))));
-            builtinList.Add(new Tuple<string, QueryObj>("channel", new QueryObj(new QueryPrimObj(e.Channel))));
+            builtinList.Add(new Tuple<string, QueryObj>("channel", new QueryObj(new QueryPrimObj(e.Channel as SocketGuildChannel))));
             builtinList.Add(new Tuple<string, QueryObj>("self", new QueryObj(new QueryPrimObj(s.getServer().GetUser(e.Author.Id)))));
             builtinList.Add(new Tuple<string, QueryObj>("this", new QueryObj(new QueryPrimObj(e.msg))));
             addAssocIgnoringFunc("name", InternalFuncs.Name);
@@ -706,11 +710,11 @@ namespace borkbot
             addBinaryFunc<QueryPrimObj, QueryPrimObj, IEnumerable<QueryPrimObj>>("cons", (x, y) => (y.ls != null ? LinkedList<QueryPrimObj>.Create(x,null).Concat(y.ls) : LinkedList<QueryPrimObj>.Create(x,(LinkedList<QueryPrimObj>.Create(y, null)))));
             addBinaryFunc<ulong, ulong, bool>("gt", (x, y) => x > y); //todo: make polymorphic;
             addBinaryFunc<SocketGuildChannel, SocketGuildUser, QueryPrimObj>("getPermissions", InternalFuncs.GetPermissions);
-//            addAssocIgnoringFunc("lastActivity", InternalFuncs.lastActivity);
+//            addAssocIgnoringFunc("alstActivity", InternalFuncs.lastActivity);
             addAssocIgnoringFunc("show", x => new QueryPrimObj(x.show()));
-            addAssocIgnoringFunc("messages", x => new QueryPrimObj(x.channel.CachedMessages.OrderBy(z => z.Timestamp).Select(y => new QueryPrimObj(y))));
+            addAssocIgnoringFunc("messages", x => new QueryPrimObj((x.channel as ISocketMessageChannel).CachedMessages.OrderBy(z => z.Timestamp).Select(y => new QueryPrimObj(y))));
             addAssocIgnoringFunc("user", x => new QueryPrimObj((SocketGuildUser)x.message.Author));
-            addAssocIgnoringFunc("channel", x => new QueryPrimObj(x.message.Channel));
+            //addAssocIgnoringFunc("channel", x => new QueryPrimObj(x.message.Channel));
             addAssocIgnoringFunc("timestamp", x => new QueryPrimObj((ulong)x.message.Timestamp.Ticks));
             addAssocIgnoringFunc("text", x => new QueryPrimObj(x.message.Content));
             addFunc("unquote", (obj, ass) => evalExpr(obj.exprObj.expr, fuseAssocLists(obj.exprObj.assoc, ass)).prim);
@@ -805,7 +809,7 @@ namespace borkbot
             {
                 res = ((T)(object)x.server);
             }
-            else if (typeof(T) == typeof(ISocketMessageChannel))
+            else if (typeof(T) == typeof(SocketGuildChannel))
             {
                 res = ((T)(object)x.channel);
             }
@@ -863,9 +867,9 @@ namespace borkbot
             {
                 y = new QueryPrimObj((SocketGuild)(object)res);
             }
-            else if (typeof(J) == typeof(ISocketMessageChannel))
+            else if (typeof(J) == typeof(SocketGuildChannel))
             {
-                y = new QueryPrimObj((ISocketMessageChannel)(object)res);
+                y = new QueryPrimObj((SocketGuildChannel)(object)res);
             }
             else if (typeof(J) == typeof(SocketGuildUser))
             {
@@ -1266,7 +1270,7 @@ namespace borkbot
     {
         public SocketMessage message;
         public SocketGuild server;
-        public ISocketMessageChannel channel;
+        public SocketGuildChannel channel;
         public SocketGuildUser user;
         public SocketRole role;
         public String str;
@@ -1279,7 +1283,7 @@ namespace borkbot
         public ExprObj exprObj;
 
         public QueryPrimObj(SocketGuild _server) { server = _server; }
-        public QueryPrimObj(ISocketMessageChannel channel) { this.channel = channel; }
+        public QueryPrimObj(SocketGuildChannel channel) { this.channel = channel; }
         public QueryPrimObj(SocketGuildUser user) { this.user = user; }
         public QueryPrimObj(SocketRole role) { this.role = role; }
         public QueryPrimObj(string str) { this.str = str; }
