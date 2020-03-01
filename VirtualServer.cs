@@ -32,10 +32,6 @@ namespace borkbot
 
     public class VirtualServer
     {
-//        String botInfo = "Syntax of this Bot:\n@mention command-name command-parameters\n\nAvailable Commands: \n";
-
-//        static String botFinalInfo = "\nspecial note: In the autogreet/admingreet/adminleave use the string literal '{user}' for the bot to replace that part of the message with a mention of the user who just joined";
-
         internal Dictionary<String, Command> Commandlist;
         SocketGuild server;
         public DiscordSocketClient DC;
@@ -86,44 +82,12 @@ namespace borkbot
                 addCommands(new StrikeModule(this).getCommands());
                 addCommands(new EmoteModule(this).getCommands());
                 addCommands(new ReportModule(this).getCommands());
-                addCommands(new Inktober(this).getCommands());
+//                addCommands(new Inktober(this).getCommands());
                 addCommands(new Userinfo(this).getCommands());
                 addCommands(new Someone(this).getCommands());
                 addCommands(new Move(this).getCommands());
                 
                 var temp = new List<Command>();
-/* TODO: Readd?
-                Action<SocketUserMessage,string> f = (x, y) => { try { var chan = server.TextChannels.Where(z => z.Name == y).FirstOrDefault(); chan.GetMessagesAsync(chan.CachedMessages.OrderBy(z => z.Id).Select(z => z.Id).FirstOrDefault(), Discord.Direction.Before, 100).Wait(); } catch (Exception e) { Console.WriteLine(e); } };
-                Action<SocketUserMessage, string> g = async (x, y) => {
-                    await Task.Run(() =>
-                    {
-                        try
-                        {
-                            String[] split = y.Split(" ".ToArray(), 2, StringSplitOptions.RemoveEmptyEntries);
-                            int msgCount = int.Parse(split[0]); string chanName = split[1];
-                            var chan = server.TextChannels.Where(z => z.Name == chanName).FirstOrDefault();
-                            if (msgCount > 0)
-                            {
-                                int loaded = System.Math.Min(msgCount, 100);
-                                var msgTask = chan.GetMessagesAsync(chan.CachedMessages.OrderBy(z => z.Id).Select(z => z.Id).FirstOrDefault(), Discord.Direction.Before, loaded);
-                                msgTask.
-                                var obtainedmsgs = msgTask.Result;
-                                msgCount -= loaded;
-                                for (; msgCount > 0; msgCount -= loaded)
-                                {
-                                    loaded = System.Math.Min(msgCount, 100);
-                                    msgTask = chan.GetMessagesAsync(obtainedmsgs.OrderBy(z => z.Id).Select(z => z.Id).FirstOrDefault());
-                                    msgTask.Wait();
-                                    obtainedmsgs = msgTask.Result;
-                                }
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            safeSendMessage(x.Channel, "You made some mistake in the syntax. This is a dangerous one, please don't play around with it.");
-                        }
-                    });
-                };*/
                 Action<ServerMessage, string> h = (x, y) =>
                 {
                     String[] split = y.Split(new String[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -135,12 +99,8 @@ namespace borkbot
                     }
                     Console.WriteLine("invocation complete");
                 };
-//                temp.Add("load", Command.AdminCommand(this, f,"")));
-//                temp.Add("loadNum", Command.AdminCommand(this,g,"")));
                 temp.Add(Command.AdminCommand(this, "multicommand", h, new HelpMsgStrings("", "")));
                 addCommands(temp);
-
-//                botInfo += botFinalInfo;
             }
             catch (Exception e)
             {
