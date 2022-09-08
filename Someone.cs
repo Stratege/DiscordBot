@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discord;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,10 +24,10 @@ namespace borkbot
 
         async private void someone(ServerMessage arg1, string arg2)
         {
-            var res = await arg1.Channel.GetUsersAsync().ToList();
-            var res2 = res.SelectMany(x => x).Where(x => !x.IsBot).ToList();
+            var res = await arg1.Channel.GetUsersAsync().FlattenAsync();
+            var res2 = res.Where(x => !x.IsBot).ToList();
             var u = res2[rnd.Next(res2.Count)];
-            server.safeSendMessage(arg1.Channel, u.Mention);
+            await server.safeSendMessage(arg1.Channel, u.Mention);
         }
     }
 }

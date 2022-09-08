@@ -87,8 +87,8 @@ namespace borkbot
 
                 server.UserLeft += (o, e) =>
                 {
-                    if (watchlist.ContainsKey(e.Id))
-                        watchlist.Remove(e.Id);
+                    if (watchlist.ContainsKey(e.Item2.Id))
+                        watchlist.Remove(e.Item2.Id);
                 };
             }
             catch (Exception excep)

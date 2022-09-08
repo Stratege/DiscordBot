@@ -26,7 +26,7 @@ namespace borkbot
             if(user != null) { 
                 var eb = new Discord.EmbedBuilder().WithAuthor("The Overbork", server.DC.CurrentUser.GetAvatarUrl()).WithCurrentTimestamp();
                 eb.WithTitle(user.Nickname + "(" + user.Username + ")").WithDescription(user.Mention);
-                eb.AddInlineField("Status", user.Status).AddInlineField("Joined", user.JoinedAt).AddInlineField("Hierarchy Position", user.Hierarchy).AddInlineField("Registered", user.CreatedAt);
+                eb.AddField("Status", user.Status,true).AddField("Joined", user.JoinedAt, true).AddField("Hierarchy Position", user.Hierarchy, true).AddField("Registered", user.CreatedAt, true);
                 var embed = eb.Build();
                 server.safeSendEmbed(e.Channel, embed);
             }else

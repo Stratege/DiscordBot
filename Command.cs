@@ -8,7 +8,7 @@ using Discord.WebSocket;
 
 namespace borkbot
 {
-    enum PrivilegeLevel { BotAdmin, Everyone };
+    enum PrivilegeLevel { BotOwner, BotAdmin, Everyone };
 
     class HelpMsgStrings
     {
@@ -48,6 +48,7 @@ namespace borkbot
 
     class Command
     {
+        static ulong botOwnerId = 94642692868288512; //todo: turn into a configurable config file option
         VirtualServer server;
         public string name;
         PrivilegeLevel priv;
@@ -77,7 +78,7 @@ namespace borkbot
 
         public bool checkPrivilege(SocketUser u, ISocketMessageChannel c)
         {
-            return (priv == PrivilegeLevel.BotAdmin && server.isAdmin(u,c)) || priv == PrivilegeLevel.Everyone;
+            return (priv == PrivilegeLevel.BotOwner && u.Id == botOwnerId) || (priv == PrivilegeLevel.BotAdmin && server.isAdmin(u,c)) || priv == PrivilegeLevel.Everyone;
         }
 
         public static Command AdminCommand(VirtualServer _server, string _name, Action<ServerMessage, String> _cmd, HelpMsgStrings _helpmessage)
@@ -85,10 +86,15 @@ namespace borkbot
             return new Command(_server,_name,_cmd, PrivilegeLevel.BotAdmin, _helpmessage);
         }
 
+        public static Command OwnerCommand(VirtualServer _server, string _name, Action<ServerMessage, String> _cmd, HelpMsgStrings _helpmessage)
+        {
+            return new Command(_server, _name, _cmd, PrivilegeLevel.BotOwner, _helpmessage);
+        }
+
         public Discord.Embed getHelpMessageEmbed()
         {
             var eb = new Discord.EmbedBuilder().WithAuthor("The Overbork", server.DC.CurrentUser.GetAvatarUrl()).WithCurrentTimestamp();
-            eb.WithTitle(name).WithDescription(helpmessage.getDescription()).AddInlineField("Format", helpmessage.getFormat()).AddInlineField("Permission Required", priv == PrivilegeLevel.Everyone ? "None" : "Bot Admin");
+            eb.WithTitle(name).WithDescription(helpmessage.getDescription()).AddField("Format", helpmessage.getFormat(),true).AddField("Permission Required", priv == PrivilegeLevel.Everyone ? "None" : "Bot Admin",true);
             var args = helpmessage.getArguments().SelectMany(x => x + "\n").ToArray();
             eb.AddField("Arguments", args.Length == 0 ? "None" : new String(args));
             /*            const int maxFieldSize = 1024;

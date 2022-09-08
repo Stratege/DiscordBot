@@ -373,14 +373,14 @@ namespace borkbot
             if (!on)
                 return;
 
-            var channel = e.Author.GetOrCreateDMChannelAsync().Result as SocketDMChannel;
+            var channel = e.Author.CreateDMChannelAsync().Result as SocketDMChannel;
 
             // GetOrCreateDMChannelAsync returns null the first time always, for some reason.
             // This is why we're waiting a second, and then calling it a second time. Kind of weird.
             // If you can find a way to make it work the first time, that would be great.
             Task.Delay(1000).ContinueWith((a) =>
             {
-                channel = e.Author.GetOrCreateDMChannelAsync().Result as SocketDMChannel;
+                channel = e.Author.CreateDMChannelAsync().Result as SocketDMChannel;
 
                 // Print the appropriate response
                 if (!UserStrikes.ContainsKey(e.Author.Id) || UserStrikes[e.Author.Id].Count((s) => !s.Resolved) == 0)

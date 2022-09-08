@@ -20,7 +20,7 @@ namespace borkbot
         public SocketUserMessage msg;
         public SocketGuildUser Author;
         public ServerMessage(SocketGuild _Server, bool _isDM, ISocketMessageChannel _Channel, SocketUserMessage _msg, SocketGuildUser _Author)
-        {
+        {   
             Server = _Server;
             isDM = _isDM;
             Channel = _Channel;
@@ -52,7 +52,7 @@ namespace borkbot
                 Commandlist = new Dictionary<string, Command>();
 
                 var virtualServerCommands = new List<Command>(4);
-                virtualServerCommands.Add(new Command(this, "help", help, PrivilegeLevel.BotAdmin, new HelpMsgStrings("", ""))); //help is very very special
+                virtualServerCommands.Add(new Command(this, "help", help, PrivilegeLevel.Everyone, new HelpMsgStrings("", ""))); //help is very very special
                 virtualServerCommands.Add(new Command(this, "shutdown", shutdown, PrivilegeLevel.BotAdmin, new HelpMsgStrings("", "shutdown <on/off>")));
                 virtualServerCommands.Add(new Command(this, "addbotadmin", addBotAdmin, PrivilegeLevel.BotAdmin, new HelpMsgStrings("", "addbotadmin <mention-target>")));
                 virtualServerCommands.Add(new Command(this, "removebotadmin", removeBotAdmin, PrivilegeLevel.BotAdmin, new HelpMsgStrings("", "removebotadmin <mention-target>")));
@@ -86,6 +86,9 @@ namespace borkbot
                 addCommands(new Userinfo(this).getCommands());
                 addCommands(new Someone(this).getCommands());
                 addCommands(new Move(this).getCommands());
+                addCommands(new Store(this).getCommands());
+                addCommands(new Proxy(this).getCommands());
+                addCommands(new Scryfall(this).getCommands());
                 
                 var temp = new List<Command>();
                 Action<ServerMessage, string> h = (x, y) =>
@@ -169,9 +172,6 @@ namespace borkbot
             safeSendMessage(e.Channel, message);
         }
 
-
-
-
         void addCommands(List<Command> cmdls)
         {
             foreach (var cmd in cmdls)
@@ -193,12 +193,14 @@ namespace borkbot
         bool isShutdown = false;
         internal EventHandler<SocketGuildUser> UserJoined;
         internal EventHandler<ServerMessage> MessageRecieved;
-        internal EventHandler<SocketGuildUser> UserLeft;
+        internal EventHandler<Tuple<SocketGuild, SocketUser>> UserLeft;
         internal EventHandler<Tuple<SocketGuildUser, SocketGuildUser>> UserUpdated;
         internal EventHandler<SocketReaction> ReactionAdded;
         internal EventHandler<SocketReaction> ReactionRemoved;
         internal EventHandler<Tuple<SocketRole, SocketRole>> RoleUpdated;
         internal EventHandler<SocketRole> RoleDeleted;
+        internal EventHandler<SocketThreadChannel> ThreadCreated;
+        internal EventHandler<SocketGuildChannel> ChannelCreated;
 
         public void reactionAdded(SocketReaction reaction)
         {
@@ -215,9 +217,14 @@ namespace borkbot
             UserJoined.Invoke(this, e);
         }
 
-        internal void userLeft(SocketGuildUser e)
+        public void channelCreated(SocketGuildChannel sgc)
         {
-            UserLeft.Invoke(this, e);
+            ChannelCreated.Invoke(this, sgc);
+        }
+
+        internal void userLeft(SocketGuild guild, SocketUser user)
+        {
+            UserLeft.Invoke(this, Tuple.Create(guild, user));
         }
 
         internal void userUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
@@ -233,6 +240,12 @@ namespace borkbot
         internal void roleDeleted(SocketRole role)
         {
             RoleDeleted.Invoke(this, role);
+        }
+
+        //Todo: Create unified notion of channel settings
+        internal void threadCreated(SocketThreadChannel stc)
+        {
+            ThreadCreated.Invoke(this, stc);
         }
 
         void shutdown(ServerMessage e, String m)
@@ -291,12 +304,12 @@ namespace borkbot
             return server;
         }
 
-        async public Task<Discord.Rest.RestUserMessage> safeSendEmbed(IMessageChannel c, Embed embed)
+        async public Task<RestUserMessage> safeSendEmbed(IMessageChannel c, Embed embed)
         {
             return await safeSendMessage(c, "", false, embed);
         }
 
-        async public Task<Discord.Rest.RestUserMessage> safeSendMessage(IMessageChannel c, string m, bool splitMessage = false, Embed embed = null)
+        async public Task<RestUserMessage> safeSendMessage(IMessageChannel c, string m, bool splitMessage = false, Embed embed = null)
         {
             if(c == null)
             {
@@ -318,11 +331,7 @@ namespace borkbot
                 Console.WriteLine("Virtualserver's server was null at the time of sending! " + m);
                 return null;
             }
-            SocketTextChannel stc = null;
-            if(c.GetType() == typeof(SocketTextChannel))
-            {
-                stc = (SocketTextChannel)c;
-            }
+            SocketTextChannel stc = c as SocketTextChannel;
             if (stc != null && stc.Guild.Id != server.Id)
             {
                 Console.WriteLine("something tried to send an illegal message: " + m);
@@ -358,9 +367,34 @@ namespace borkbot
             return null;
         }
 
+        bool threadResyncDone = false;
+
+        async Task resyncThreads()
+        {
+            foreach(var c in server.TextChannels)
+            {
+                foreach(var t in c.Threads)
+                {
+                    if(!t.HasJoined)
+                    {
+                        await t.JoinAsync();
+                        ThreadCreated.Invoke(this,t);
+                    }
+                }
+            }
+        }
+
         public void messageRecieved(ServerMessage e)
         {
-            if (!e.Author.IsBot && (e.msg.MentionedUsers.Count(x => x.Id == DC.CurrentUser.Id) > 0 || (altCommand.isOn && e.msg.Content.StartsWith(altCommand.alternativeSyntax))))
+            if(!threadResyncDone)
+            {
+                threadResyncDone = true;
+                resyncThreads();
+            }
+
+            if (e.Author == null)
+                return;
+            if (!e.Author.IsWebhook && !e.Author.IsBot && (e.msg.MentionedUsers.Count(x => x.Id == DC.CurrentUser.Id) > 0 || (altCommand.isOn && e.msg.Content.StartsWith(altCommand.alternativeSyntax))))
             {
                 var res = parseMessage(e.msg.Content);
                 if (res != null)
@@ -394,9 +428,7 @@ namespace borkbot
                     return true;
                 else
                     return false;
-            }else
-            if (channel.GetType() == typeof(SocketTextChannel))
-            {
+            }else if (channel.GetType() == typeof(SocketTextChannel) || channel.GetType() == typeof(SocketVoiceChannel)) {
                 var stc = (SocketTextChannel)channel;
                 if (stc.Guild == null || server == null)
                 {
@@ -410,8 +442,10 @@ namespace borkbot
                 if (Admins.Contains(user.Id.ToString()))
                     return true;
                 return false;
-            }else
-            {
+            }else if(channel.GetType() == typeof(SocketThreadChannel)) {
+                var stc = (SocketThreadChannel)channel;
+                return isAdmin(user, (SocketTextChannel)stc.ParentChannel);
+            }else{
                 Console.WriteLine("Got isAdmin check on channel type " + channel.GetType() + " this is atm unhandled");
                 return false;
             }
@@ -429,7 +463,9 @@ namespace borkbot
             string[] split;
             string command;
             string payload;
-            if (raw.StartsWith(DC.CurrentUser.Mention)) // || raw.StartsWith(DC.CurrentUser.NicknameMention))
+            var nickmention = DC.CurrentUser.Mention;
+            var nonnickmention = nickmention.Substring(0, 2) + nickmention.Substring(3);
+            if (raw.Trim().StartsWith(nickmention) || raw.Trim().StartsWith(nonnickmention))
             {
                 split = raw.Split(" \n  ".ToCharArray(), 3, StringSplitOptions.RemoveEmptyEntries);
                 if(split.Length >= 2)
@@ -521,7 +557,7 @@ namespace borkbot
             }
         }
         
-        T XMLSetup<T>(String filepath)
+        public T XMLSetup<T>(String filepath)
         {
             return fileCommand(filepath, Funcs.XMLSetup<T>);
         }

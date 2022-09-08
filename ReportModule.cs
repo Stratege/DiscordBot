@@ -113,7 +113,7 @@ namespace borkbot
         /// <returns></returns>
         private IMessageChannel GetDMChannel(SocketGuildUser user)
         {
-            var channel = user.GetOrCreateDMChannelAsync().Result;
+            var channel = user.CreateDMChannelAsync().Result;
 
             // GetOrCreateDMChannelAsync returns null the first time always, for some reason.
             // This is why we're waiting a second, and then calling it a second time. Kind of weird.

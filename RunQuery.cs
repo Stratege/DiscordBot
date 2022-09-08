@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 
 
@@ -605,9 +606,9 @@ namespace borkbot
                         var pon = y.GetPermissionOverwrite(x.role);
                         if (pon.HasValue) {
                             var po = pon.Value;
-                            access = access || po.ReadMessages == Discord.PermValue.Allow;
+                            access = access || po.ViewChannel == Discord.PermValue.Allow;
                             var everyone = y.GetPermissionOverwrite(x.role.Guild.EveryoneRole).Value;
-                            access = access || (everyone.ReadMessages != Discord.PermValue.Deny && po.ReadMessages == Discord.PermValue.Inherit);
+                            access = access || (everyone.ViewChannel != Discord.PermValue.Deny && po.ViewChannel == Discord.PermValue.Inherit);
                         }
                         return access;
                     });
@@ -644,13 +645,14 @@ namespace borkbot
                 ret.Add(f("EmbedLinks", perm.EmbedLinks));
                 ret.Add(f("ManageChannel", perm.ManageChannel));
                 ret.Add(f("ManageMessages", perm.ManageMessages));
-                ret.Add(f("ManagePermissions", perm.ManagePermissions));
+                ret.Add(f("ManageRoles", perm.ManageRoles));
                 ret.Add(f("MentionEveryone", perm.MentionEveryone));
                 ret.Add(f("MoveMembers", perm.MoveMembers));
                 ret.Add(f("MuteMembers", perm.MuteMembers));
                 ret.Add(g("RawValue", perm.RawValue));
                 ret.Add(f("ReadMessageHistory", perm.ReadMessageHistory));
-                ret.Add(f("ReadMessages", perm.ReadMessages));
+                ret.Add(f("ReadMessages", perm.ViewChannel));
+                ret.Add(f("ViewChannel", perm.ViewChannel));
                 ret.Add(f("SendMessages", perm.SendMessages));
                 ret.Add(f("SendTTSMessages", perm.SendTTSMessages));
                 ret.Add(f("Speak", perm.Speak));
@@ -713,6 +715,7 @@ namespace borkbot
 //            addAssocIgnoringFunc("alstActivity", InternalFuncs.lastActivity);
             addAssocIgnoringFunc("show", x => new QueryPrimObj(x.show()));
             addAssocIgnoringFunc("messages", x => new QueryPrimObj((x.channel as ISocketMessageChannel).CachedMessages.OrderBy(z => z.Timestamp).Select(y => new QueryPrimObj(y))));
+            addAssocIgnoringFunc("loadMsgs", loadMsgs);
             addAssocIgnoringFunc("user", x => new QueryPrimObj((SocketGuildUser)x.message.Author));
             //addAssocIgnoringFunc("channel", x => new QueryPrimObj(x.message.Channel));
             addAssocIgnoringFunc("timestamp", x => new QueryPrimObj((ulong)x.message.Timestamp.Ticks));
@@ -721,6 +724,14 @@ namespace borkbot
             addBinaryFunc<string, string, bool>("strContains", (x, y) => x.Contains(y));
             //            builtinList.Add(new Tuple<string, QueryObj>())
         }
+
+        QueryPrimObj loadMsgs(QueryPrimObj x)
+        {
+            var res = (x.channel as ISocketMessageChannel).GetMessagesAsync(100).FlattenAsync();
+            var arr = res.GetAwaiter().GetResult();
+            return new QueryPrimObj(arr.Select(y => new QueryPrimObj(y as SocketMessage)));
+        }
+        
 
         private void addBinaryFunc<T, J, K>(String name, Func<T, J, K> f)
         {

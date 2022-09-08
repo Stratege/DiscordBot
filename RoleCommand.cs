@@ -114,10 +114,8 @@ namespace borkbot
                 {
                     // We might be trying to add the same command twice, because of roles that share the same first word
                     // For example: Stable Dweller exists, now trying to add Stable Pony.
-                    if (!commands.Any((t) => t.name == GetRoleNameCommand(role.Name)))
-                    {
-                        commands.Add(new Command(server, GetRoleNameCommand(role.Name), ModifyRolesByCommandName, PrivilegeLevel.Everyone, new HelpMsgStrings("", role.Name + " (role command)")));
-                    }
+                    //change: that's okay, generates better help msg
+                    commands.Add(makeEnableableCommand(GetRoleNameCommand(role.Name), ModifyRolesByCommandName, PrivilegeLevel.Everyone, new HelpMsgStrings("", role.Name + " (role command)")));
                 }
                 else
                 {
@@ -166,7 +164,7 @@ namespace borkbot
 
         private void persistLSSState()
         {
-            server.fileCommand("lobbyselfserviceenableStatus.txt", x => System.IO.File.WriteAllText(x, (on ? "on" : "off")));
+            server.fileCommand("lobbyselfserviceenableStatus.txt", x => System.IO.File.WriteAllText(x, (lssOn ? "on" : "off")));
         }
 
 

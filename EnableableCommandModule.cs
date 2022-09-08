@@ -79,6 +79,10 @@ namespace borkbot
             server.fileCommand(module_name + filesuffix, x => System.IO.File.WriteAllText(x,(on ? "on" : "off")));
         }
 
+        protected void _EnableCommandPersistState()
+        {
+            persistState();
+        }
     }
 }
 

@@ -31,9 +31,10 @@ namespace borkbot
                 throw new Exception("setup error");
             server.UserLeft += (s, u) =>
             {
+                
                 if (on && amc.channel != null)
                 {
-                    server.safeSendMessage(amc.channel, wmls.Response(u));
+                    server.safeSendMessage(amc.channel, wmls.Response(u.Item2));
                 }
             };
         }

@@ -32,6 +32,7 @@ namespace borkbot
             Console.WriteLine("WebSocketProvider: " + cfgbld.WebSocketProvider);
             cfgbld.WebSocketProvider = Discord.Net.Providers.WS4Net.WS4NetProvider.Instance;
             Console.WriteLine("WebSocketProvider: " + cfgbld.WebSocketProvider);
+            cfgbld.AlwaysDownloadUsers = true;
             DC = new DiscordSocketClient(cfgbld);
             PrivateMessageHandler pmHandler = new PrivateMessageHandler(DC, servers);
 
@@ -55,7 +56,7 @@ namespace borkbot
 
             });
 
-            DC.MessageReceived += async (msg) =>
+            Func<SocketMessage,Task> msgReceivedHandling = async (SocketMessage msg) =>
                 await Task.Run(() =>
                 {
                     //we ignore our own messages
@@ -80,18 +81,21 @@ namespace borkbot
                         Console.WriteLine("Did not handle non-user msg: " + msg);
                     }
                 });
+
+            DC.MessageReceived += msgReceivedHandling;
             DC.UserJoined += async (user) =>
              await Task.Run(() =>
              {
                  servers[user.Guild.Id].userJoined(user);
              });
-            DC.UserLeft += async (user) =>
+            DC.UserLeft += async (guild,user) =>
              await Task.Run(() =>
              {
-                 servers[user.Guild.Id].userLeft(user);
+                 servers[guild.Id].userLeft(guild,user);
              });
 
-            DC.UserUpdated += async (userOld, userNew) =>
+            //todo: fix
+/*            DC.UserUpdated += async (userOld, userNew) =>
              await Task.Run(() =>
              {
                  if (userNew.GetType() == typeof(SocketGuildUser))
@@ -102,7 +106,7 @@ namespace borkbot
                  {
                      Console.WriteLine("Unhandled User Update received:\n" + userOld + "\nand\n" + userNew);
                  }
-             });
+             });*/
 
             DC.RoleUpdated += async (oldRole, newRole) =>
             await Task.Run(() => {
@@ -155,11 +159,12 @@ namespace borkbot
             {
                 Console.WriteLine("Log Message: " + msg);
                 Console.WriteLine("test: " + msg.Message);
-                if (msg.Message.ToLower() == "failed to resume previous session")
+                //this had to be disabled because discord.net's deserialization code is the biggest jank I have ever seen.
+/*                if (msg.Exception != null || msg.Message == null || msg.Message.ToLower() == "failed to resume previous session")
                 {
                     //we just, you know, quit
                     System.Environment.Exit(0);
-                }
+                }*/
                 return Task.FromResult<object>(null);
             };
 
@@ -171,6 +176,34 @@ namespace borkbot
                 else
                     Console.WriteLine("Deleted unknown message with Id: " + msg.Id);
                 return Task.FromResult<object>(null);
+            };
+
+            DC.ThreadCreated += async (stc) =>
+            {
+                await stc.JoinAsync();
+                await Task.Run(() =>
+                {
+                    servers[stc.Guild.Id].threadCreated(stc);
+                });
+            };
+
+            DC.ChannelCreated += async (sc) =>
+            {
+                var sgc = sc as SocketGuildChannel;
+                if (sgc != null) {
+                    await Task.Run(() =>
+                    {
+                        servers[sgc.Guild.Id].channelCreated(sgc);
+                    });
+                }
+            };
+
+            DC.MessageUpdated += async (a, msg, b) =>
+            {
+                if (DateTime.Now - msg.Timestamp <= new TimeSpan(0, 5, 0))
+                {
+                    await msgReceivedHandling(msg);
+                }
             };
 
             Console.WriteLine("Execute phase");

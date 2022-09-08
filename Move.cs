@@ -72,6 +72,68 @@ namespace borkbot
             server.safeSendMessage(e.Channel, message);
         }
 
+        void moveInternal(ServerMessage e, SocketVoiceChannel source, int moveCount, SocketVoiceChannel target)
+        {
+            var userCount = source.Users.Count;
+            server.safeSendMessage(e.Channel, "users requested: " + moveCount);
+            if (userCount < moveCount)
+            {
+                moveCount = userCount;
+            }
+            server.safeSendMessage(e.Channel, "users found: " + userCount);
+            List<SocketGuildUser> s = new List<SocketGuildUser>();
+            var temp = source.Users.ToList();
+            var rand = new Random();
+            while (s.Count < moveCount)
+            {
+                var r = rand.Next(temp.Count);
+                s.Add(temp[r]);
+                temp.RemoveAt(r);
+            }
+            s.ForEach(x => x.ModifyAsync(y => y.Channel = target));
+            var msg = "Moving: ";
+            s.ForEach(x => msg += x.Username + " ");
+            server.safeSendMessage(e.Channel, msg);
+        }
+        void movedirect(ServerMessage e, String msg)
+        {
+            string[] split = msg.Split(" ".ToArray());
+            int moveCount = 0;
+            if (split[0] == "")
+            {//not enough
+                server.safeSendMessage(e.Channel, "no parameter passed");
+            }
+            else if (split.Length < 3)
+            {
+                server.safeSendMessage(e.Channel, "not enough parameters passed");
+            }
+            else if (split.Length > 3)
+            {//too many
+                server.safeSendMessage(e.Channel, "too many values");
+            }
+            else if (Int32.TryParse(split[1], out moveCount))
+            {
+                var m = split[0];
+                if (m.Length > 0 && m[0] == '#')
+                    m = m.Substring(1);
+                var source = e.Server.VoiceChannels.FirstOrDefault(x => x.Name == m);
+                m = split[2];
+                if (m.Length > 0 && m[0] == '#')
+                    m = m.Substring(1);
+                var target = e.Server.VoiceChannels.FirstOrDefault(x => x.Name == m);
+                if (source == null)
+                    server.safeSendMessage(e.Channel, "could not find source channel");
+                else if (target == null)
+                    server.safeSendMessage(e.Channel, "could not find target channel");
+                else
+                    moveInternal(e, vSource, moveCount, vTarget);
+            }
+            else
+            {
+                //not a number
+                server.safeSendMessage(e.Channel, "input was not a number");
+            }
+        }
 
         void move(ServerMessage e, String m)
         {
@@ -87,26 +149,7 @@ namespace borkbot
             }
             else if(Int32.TryParse(split[0],out moveCount))
             {
-                var userCount = vSource.Users.Count;
-                server.safeSendMessage(e.Channel, "users requested: " + moveCount);
-                if (userCount < moveCount)
-                {
-                    moveCount = userCount;
-                }
-                server.safeSendMessage(e.Channel, "users found: " + userCount);
-                List<SocketGuildUser> s = new List<SocketGuildUser>();
-                var temp = vSource.Users.ToList();
-                var rand = new Random();
-                while(s.Count < moveCount)
-                {
-                    var r = rand.Next(temp.Count);
-                    s.Add(temp[r]);
-                    temp.RemoveAt(r);
-                }
-                s.ForEach(x => x.ModifyAsync(y => y.Channel = vTarget));
-                var msg = "Moving: ";
-                s.ForEach(x => msg += x.Username + " ");
-                server.safeSendMessage(e.Channel, msg);
+                moveInternal(e,vSource, moveCount, vTarget);
             }
             else
             {

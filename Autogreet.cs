@@ -15,10 +15,10 @@ namespace borkbot
             {
                 if (on)
                 {
-                    var x = await u.GetOrCreateDMChannelAsync();
+                    var x = await u.CreateDMChannelAsync();
                     var chn = x as SocketDMChannel;
                     if (chn != null)
-                        server.safeSendMessage(chn, wmls.Response(u));
+                        await server.safeSendMessage(chn, wmls.Response(u));
                     else
                         Console.WriteLine("Could not create DM channel with: " + u.Username);
                 }
