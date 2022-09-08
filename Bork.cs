@@ -1,4 +1,11 @@
-﻿using System;
+﻿/* Module for automated emoji tagging of messages
+ * 
+ * tags every few messages (configurable) of configured users with a specific emoji
+ * 
+ * note: this is the original module and is due for a rewrite TODO
+ * */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -46,12 +53,6 @@ namespace borkbot
                     {
                         foreach (var y in localborklist)
                         {
-                            //                            try
-                            //                            {
-
-                            //Todo: Rewrite this so that non-server emotes work as well!
-
-                            //                            IEmote emote = server.getServer().Emotes.Where(x => x.ToString() == "<"+y+">").FirstOrDefault();
                             Emote emote;
 
                             if (Emote.TryParse(y, out emote) && server.getServer().Emotes.Select(em => em.Id).Contains(emote.Id))
@@ -62,19 +63,6 @@ namespace borkbot
                                 //todo: figure out how to remove an emoji after adding it failed?
                                 e.msg.AddReactionAsync(new Emoji(y));
                             }
-/*                            else
-                            {
-                                Console.WriteLine("could not find emote: " + y);
-                            }*/
-                                    //bit of a hack to send a special msg
-                                    /*                                var x = server.getServer().Client.ClientAPI.Send(new EmojiAddRequest(e.Channel.Id, e.Message.Id, y));
-                                                                    x.Wait();
-                                    */
-/*                                }
-                            catch (Exception exception)
-                            {
-                                Console.WriteLine(exception);
-                            }*/
                         }
                         count.Item1 = 0;
                     }
@@ -101,7 +89,6 @@ namespace borkbot
                 if (Funcs.validateMentionTarget(e, split[0]))
                 {
                     Emote emote;
-                    //string emoji = server.toEmojiString(e, split[1]);
                     IEmote emoji = null;
                     if(Emote.TryParse(split[1], out emote))
                     {
@@ -134,8 +121,6 @@ namespace borkbot
                             }
                             else if (split[2] == "on")
                             {
-                                //                            var x = DC.ClientAPI.Send(new EmojiAddRequest(e.Channel.Id, e.Message.Id, ));
-                                //                            x.Wait();
                                 List<String> individualBorklist;
                                 if (!borklist.TryGetValue(userId, out individualBorklist))
                                 {

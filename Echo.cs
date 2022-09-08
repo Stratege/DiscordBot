@@ -1,4 +1,6 @@
-﻿using System;
+﻿/* Simple module for sending messages as the bot
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,9 +24,6 @@ namespace borkbot
 
         private void echo(ServerMessage e, string m)
         {
-
-            //            if (!e.Channel.IsPrivate)
-            //                return;
             string[] split = m.Split(" ".ToArray(),2);
             if (split.Length < 2)
                 return;

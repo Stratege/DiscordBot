@@ -1,4 +1,10 @@
-﻿using System;
+﻿/* A variety of parser implementations, used by RunQuery module
+ * 
+ * MParse is built to look and roughly operate like a monadic parser in haskell
+ * Internally it uses exceptions for backtracking which allows for convenient syntax but can lead to bad performance for grammars that are not left linear
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

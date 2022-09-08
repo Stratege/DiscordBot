@@ -1,4 +1,7 @@
-﻿using System;
+﻿/* Modules for handling notification of user joining/leaving and automated greeting messages
+ * */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

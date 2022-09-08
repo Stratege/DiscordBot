@@ -1,4 +1,8 @@
-﻿using System;
+﻿/* Provides facilities to turn closures into commands
+ * 
+ * handles access privilege setting and the code for creating help messages
+ * */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

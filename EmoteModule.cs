@@ -1,4 +1,8 @@
-﻿using Discord;
+﻿/* Module for tracking emote usage
+ * 
+ * Primary Author: Yossarian
+ */
+using Discord;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;

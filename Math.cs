@@ -1,4 +1,10 @@
-﻿using System;
+﻿/* General math module, also can do dice rolls
+ * 
+ * also contains a precedence based parser
+ * 
+ * TODO: Reconsider the limits imposed and improve output formatting
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

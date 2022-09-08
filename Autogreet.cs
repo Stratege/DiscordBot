@@ -1,4 +1,7 @@
-﻿using System;
+﻿/* Module for automated sending of a PM to newly joined user
+ * */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

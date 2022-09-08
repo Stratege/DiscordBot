@@ -1,4 +1,13 @@
-﻿using System;
+﻿/* Module for setting up votes in discord
+ * 
+ * Core Goals:
+ * - Anonymous
+ * - Fair
+ * - Minimizing stored data on who voted and what
+ * 
+ * TODO: Rework now that discord provides better bot interaction support (improve UI and probably better anonymity guarantees)
+ */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;

@@ -1,4 +1,8 @@
-﻿using System;
+﻿/* Base class for all Modules that are not always enabled
+ * 
+ * configurated to be disabled by default
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

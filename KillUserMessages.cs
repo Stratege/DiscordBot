@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Module for mass deletion of messages from a user within the last 15 mins
+ * 
+ * intended for dealing with spam, especially if missclicking on the ban to not have the ban delete the msgs
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

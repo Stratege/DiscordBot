@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Module for simple dice rolls
+ * 
+ * mostly superceded by the Math module
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

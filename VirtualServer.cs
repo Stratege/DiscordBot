@@ -1,4 +1,14 @@
-﻿using System;
+﻿/* Primary Interface of the Bot.
+ *
+ * Abstracts and Insulates all interactions to be contained to a specific discord server
+ * handles authentification of messages, parsing into commands and calling the correct command handler
+ * - to add new commands add the module in the constructor
+ * - to send messages use safeSendMessage or safeSendEmbed
+ * - to read/store data use filecommand
+ * as long as those 3 practices are being followed any module added will be properly insulated
+ * */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
