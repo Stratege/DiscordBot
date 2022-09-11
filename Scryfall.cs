@@ -1,6 +1,8 @@
 ﻿/* Module that queries the scryfall REST API
  * 
- * supports explicit search as well as inline via [[ ]]
+ * supports explicit search for name as well as inline via [[ ]]
+ * if first letter of search is @ it does a full search, otherwise it's a fuzzy name lookup (with improved resolving)
+ *  
  */
 using System;
 using System.Collections.Generic;
