@@ -1,4 +1,8 @@
-﻿using System;
+﻿/* Module that queries the scryfall REST API
+ * 
+ * supports explicit search as well as inline via [[ ]]
+ */
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -117,12 +121,80 @@ namespace borkbot
         private async void lookup(ServerMessage e, string msg)
         {
             //todo: sanitize msg
-            lookupInternal(e, msg, false);
+            if(msg == null || msg == "")
+            {
+                await server.safeSendMessage(e.Channel,"Can not search for empty msg");
+                return;
+            }
+            else
+            {
+                if(msg[0] == '@')
+                {
+                    await lookupInternalComplex(e, msg.Substring(1));
+                }
+                else
+                {
+                    await lookupInternal(e, msg, false);
+                }
+            }
         }
 
-        private async void lookupInternal(ServerMessage e, string msg, bool lastChance)
+        private static DateTime lastSent = DateTime.MinValue;
+        private static Object lockObj = new object();
+
+        private void rateLimit()
         {
-            //todo: this needs to be nonblocking and also part of a global cd
+            //global cd to respect API limits
+            lock (lockObj)
+            {
+                if (lastSent + TimeSpan.FromMilliseconds(100) > DateTime.Now)
+                {
+                    System.Threading.Thread.Sleep((lastSent + TimeSpan.FromMilliseconds(100) - DateTime.Now).Milliseconds);
+                }
+                lastSent = DateTime.Now;
+            }
+        }
+
+        private async Task lookupInternalComplex(ServerMessage e, string msg)
+        {
+            rateLimit();
+            var ret = await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.scryfall.com/cards/search?q=" + Uri.EscapeDataString(msg)));
+            var json = JObject.Parse(await ret.Content.ReadAsStringAsync());
+            var retStatus = json.Value<int?>("status");
+            if (retStatus != null)
+            {
+                var det = json.Value<string>("details");
+                if (await checkError(e, det)) return;
+                await server.safeSendMessage(e.Channel, det);
+                return;
+            }
+            var count = json.Value<int>("total_cards");
+            var data = json.Value<JArray>("data");
+            int maxResponse = 10;
+            int i = System.Math.Min(maxResponse, count);
+            var res = new List<String>();
+            foreach(var d in data)
+            {
+                i--;
+                if (i < 0)
+                    break;
+                res.Add(d.Value<string>("name"));
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.Append("Cards matching your query");
+            if(count > maxResponse)
+            {
+                sb.Append("(showing " + maxResponse + " out of " + count + ")");
+            }
+            sb.AppendLine(": ");
+            foreach (var r in res)
+                sb.AppendLine(r);
+            await server.safeSendMessage(e.Channel, sb.ToString());
+        }
+
+        private async Task lookupInternal(ServerMessage e, string msg, bool lastChance)
+        {
+            rateLimit();
             var ret = await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.scryfall.com/cards/named?fuzzy=" + msg));
             var json = JObject.Parse(await ret.Content.ReadAsStringAsync());
             var retStatus = json.Value<int?>("status");
@@ -135,7 +207,7 @@ namespace borkbot
                     if (!lastChance && s != null)
                     {
                         await Task.Delay(100);
-                        lookupInternal(e, s, true);
+                        await lookupInternal(e, s, true);
                     }
                     return;
                 }

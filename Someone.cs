@@ -1,4 +1,6 @@
-﻿using Discord;
+﻿/* Module that reimplements the april fools joke of @someone as a bot command
+ */
+using Discord;
 using System;
 using System.Collections.Generic;
 using System.Linq;
