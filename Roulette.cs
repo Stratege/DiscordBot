@@ -1,4 +1,6 @@
-﻿using System;
+﻿/* A very simple "russian roulette" type module, inspired by old IRC bots
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

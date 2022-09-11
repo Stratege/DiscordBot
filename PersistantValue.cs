@@ -1,4 +1,6 @@
-﻿using System;
+﻿/* Contains PersistantValue, a class that stores a singular value with the logic to serialize and deserialize as needed
+ */
+using System;
 using System.Collections.Generic;
 using System.Text;
 

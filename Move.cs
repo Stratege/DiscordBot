@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Module for moving a random selection of users from one voice channel to another
+ * 
+ * useful for random pulls into a VC
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

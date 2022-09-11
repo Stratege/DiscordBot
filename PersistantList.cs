@@ -1,4 +1,6 @@
-﻿using System;
+﻿/* Contains PersistantList, a variant on a List with the logic to serialize and deserialize as needed
+ */
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;

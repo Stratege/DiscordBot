@@ -81,7 +81,6 @@ namespace borkbot
                 addCommands(new Math(this).getCommands());
                 addCommands(new Bork(this).getCommands());
                 addCommands(new KillUserMessages(this).getCommands());
-                addCommands(new PurgeTheEnclave(this).getCommands());
                 addCommands(new UntaggedUsers(this).getCommands());
                 addCommands(new Reminder(this).getCommands());
                 addCommands(new RunQuery(this).getCommands());

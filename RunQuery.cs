@@ -1,4 +1,12 @@
-﻿using System;
+﻿/* Technically a module, but really more a REPL for discord
+ * 
+ * parser+interpreter for a custom lisp-ish language for writing queries on the 
+ * 
+ * consider figuring out a way to improve usability. A way to report possible functions would be nice ... but since it's ducktyped that sounds like it'd be pretty difficult.
+ * ... of course since we have well typed primitives and no way to define our own types yet it should be doable
+ */
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,12 +23,10 @@ namespace borkbot
 {
     class RunQuery : CommandHandler
     {
-        CancellationTokenSource tokenSource2 = new CancellationTokenSource();
         static int millisecondMaxQueryLength = 2000;
         int curMaxMillisecondQueryLength = 0;
         QueryParser q = new QueryParser();
         PersistantList storage;
-        bool noPriorQueries = true;
 
         public RunQuery(VirtualServer _server) : base(_server)
         {
@@ -43,35 +49,31 @@ namespace borkbot
 
         void query(ServerMessage e, String m)
         {
+            
             Interpreter interpreter = new Interpreter(e,server);
             foreach (var x in storage)
             {
                 queryHelper(interpreter, x,true);
             }
-            noPriorQueries = false;
             Console.WriteLine(e.Author.Username + (e.Server != null ? " on server " + e.Server.Name : "") + " has executed query: \"" + m + "\"");
             var res = "";
             bool kill = false;
             int maxDur = (curMaxMillisecondQueryLength != 0) ? curMaxMillisecondQueryLength : millisecondMaxQueryLength;
             try
             {
-                res = Funcs.WithTimeout(() => queryHelper(interpreter, m,false), maxDur);
+                res = Funcs.WithTimeout((CancellationToken ct) => {
+                    return queryHelper(interpreter, m, false);
+                    }, maxDur);
                 
             }
-            catch
+            catch(Exception ex)
             {
                 server.safeSendMessage(e.Channel, "Query took too long. Current max: " + maxDur + "ms");
                 kill = true;
             }
             if (!kill)
             {
-                while (res.Length > 2000)
-                {
-                    
-                    server.safeSendMessage(e.Channel, res.Substring(0,2000));
-                    res = res.Substring(2000);
-                }
-                server.safeSendMessage(e.Channel, res);
+                server.safeSendMessage(e.Channel, res,true);
             }
         }
 
@@ -665,7 +667,7 @@ namespace borkbot
                 DateTime? dt;
                 if (x.user != null)
                     dt = x.user.LastActivityAt;
-                else
+                else!d
                     throw new Exception("type error: user was null");
                 if (!dt.HasValue)
                     return new QueryPrimObj("never");
@@ -1077,7 +1079,9 @@ namespace borkbot
 
         static QueryObj evalExpr(Expr expr, LinkedList<Tuple<Var, QueryObj>> assocList)
         {
-
+            //this is subideal, TODO: reenginer everything to use cancellation tokens
+            if (Thread.CurrentThread.Name != null)
+                throw new TimeoutException();
             if (expr is Let)
             {
                 Let let = (Let)expr;

@@ -1,4 +1,12 @@
-﻿using System;
+﻿/* Module for setting up regular reminders
+ * 
+ * also contains the various things needed for changing it
+ * 
+ * TODO: investigate if it has persistance?
+ * TODO: improve parsing and reporting, currently does not handle #<channelname> and reminder list is not helpful
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;

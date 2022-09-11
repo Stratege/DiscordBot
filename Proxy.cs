@@ -1,4 +1,12 @@
-﻿using Discord.Webhook;
+﻿/* Module which contains the logic for proxying messages
+ * 
+ * - users set up prefixes that when found in messages have their messages swapped with one by a user defined name+profile
+ * - users can also set up auto proxying, replacing all their messages in a particular channel
+ * - channels can be set into RP only mode, allowing only RP proxied messages in the channel
+ * - RP proxies are not allowed outside of RP channels (use normal proxies for that)
+ */
+
+using Discord.Webhook;
 using System;
 using System.Collections.Generic;
 using System.Text;

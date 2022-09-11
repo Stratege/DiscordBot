@@ -1,4 +1,7 @@
-﻿using System;
+﻿/* Contains PersistantDictionary, a variant on a dictionary with the logic to serialize and deserialize as needed
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

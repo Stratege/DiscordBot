@@ -1,4 +1,11 @@
-﻿using System;
+﻿/* Handler that sits between the framework and the virtual servers abstraction, contains the logic for allowing people to send PMs to the bot and have them be treated as server messages
+ * 
+ * entirely transparent for modules
+ * stores the user<->server mapping and provides the facilities for server selection
+ * 
+ * TODO: avoid having to replicate command structures in this
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

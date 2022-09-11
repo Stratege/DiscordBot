@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml.Serialization;
 
 namespace borkbot
@@ -116,37 +117,31 @@ namespace borkbot
         }
 
 
-        //taken straight from: http://stackoverflow.com/a/9461311
-        public static R WithTimeout<R>(Func<R> proc, int millisecondsDuration)
+        //Thread.Abort() is not supported anymore
+        public static R WithTimeout<R>(Func<CancellationToken, R> proc, int millisecondsDuration)
         {
-            var reset = new System.Threading.AutoResetEvent(false);
+            var cts = new CancellationTokenSource();
             var r = default(R);
             Exception ex = null;
+
 
             var t = new System.Threading.Thread(() =>
             {
                 try
                 {
-                    r = proc();
+                    r = proc(cts.Token);
                 }
                 catch (Exception e)
                 {
                     ex = e;
                 }
-                reset.Set();
             });
 
             t.Start();
-
-            // not sure if this is really needed in general
-            while (t.ThreadState != System.Threading.ThreadState.Running)
+            //            cts.CancelAfter(millisecondsDuration);
+            if (!t.Join(millisecondsDuration))
             {
-                System.Threading.Thread.Sleep(0);
-            }
-
-            if (!reset.WaitOne(millisecondsDuration))
-            {
-                t.Abort();
+                t.Name = "Timeout";
                 throw new TimeoutException();
             }
 

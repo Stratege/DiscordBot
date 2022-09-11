@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Generalized version of the precedence parser used by the Math module
+ * 
+ * TODO: extract or make the math module use this
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
