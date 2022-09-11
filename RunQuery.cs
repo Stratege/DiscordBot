@@ -724,6 +724,7 @@ namespace borkbot
             addAssocIgnoringFunc("text", x => new QueryPrimObj(x.message.Content));
             addFunc("unquote", (obj, ass) => evalExpr(obj.exprObj.expr, fuseAssocLists(obj.exprObj.assoc, ass)).prim);
             addBinaryFunc<string, string, bool>("strContains", (x, y) => x.Contains(y));
+            addAssocIgnoringFunc("isEmpty", x => new QueryPrimObj(x.ls == null || !x.ls.Any()));
             //            builtinList.Add(new Tuple<string, QueryObj>())
         }
 

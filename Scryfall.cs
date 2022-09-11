@@ -218,11 +218,31 @@ namespace borkbot
                 await server.safeSendMessage(e.Channel, det);
                 return;
             }
+            var card_faces = json.Value<JArray>("card_faces");
+            if(card_faces != null)
+            {
+                foreach(var face in card_faces)
+                {
+                    if (await lookupInternalImageResponse(e,face))
+                        return;
+                }
+            }
+            else
+            {
+                if (await lookupInternalImageResponse(e, json))
+                    return;
+            }
+
+        }
+
+        private async Task<bool> lookupInternalImageResponse(ServerMessage e, JToken json)
+        {
             var images = json.Value<JObject>("image_uris");
-            if (await checkError(e, images)) return;
+            if (await checkError(e, images)) return true;
             var normal = images.Value<string>("normal");
-            if (await checkError(e, normal)) return;
+            if (await checkError(e, normal)) return true;
             await server.safeSendMessage(e.Channel, normal);
+            return false;
         }
 
         private async Task<string?> fuzzyHandle(ServerMessage e, string msg, bool lastChance)
