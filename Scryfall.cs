@@ -186,7 +186,7 @@ namespace borkbot
             sb.Append("Cards matching your query");
             if(count > maxResponse)
             {
-                sb.Append("(showing " + maxResponse + " out of " + count + ")");
+                sb.Append(" (showing first " + maxResponse + " out of " + count + ")");
             }
             sb.AppendLine(": ");
             foreach (var r in res)
