@@ -38,6 +38,7 @@ namespace borkbot
             cfgbld.WebSocketProvider = Discord.Net.Providers.WS4Net.WS4NetProvider.Instance;
             Console.WriteLine("WebSocketProvider: " + cfgbld.WebSocketProvider);
             cfgbld.AlwaysDownloadUsers = true;
+            cfgbld.GatewayIntents = Discord.GatewayIntents.AllUnprivileged | Discord.GatewayIntents.MessageContent | Discord.GatewayIntents.GuildMembers;
             DC = new DiscordSocketClient(cfgbld);
             PrivateMessageHandler pmHandler = new PrivateMessageHandler(DC, servers);
 
