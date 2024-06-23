@@ -16,11 +16,11 @@ namespace borkbot
         {
             if (amc == null || !amc.sameServer(this.server))
                 throw new Exception("setup error");
-            server.UserJoined += (s, u) =>
+            server.UserJoined += async (s, u) =>
             {
                 if (on && u.Guild.Id == server.getServer().Id && amc.channel != null)
                 {
-                    server.safeSendMessage(amc.channel, wmls.Response(u));
+                    await server.safeSendMessage(amc.channel, wmls.Response(u));
                 }
             };
         }
@@ -32,12 +32,12 @@ namespace borkbot
         {
             if (amc == null || !amc.sameServer(this.server))
                 throw new Exception("setup error");
-            server.UserLeft += (s, u) =>
+            server.UserLeft += async (s, u) =>
             {
                 
                 if (on && amc.channel != null)
                 {
-                    server.safeSendMessage(amc.channel, wmls.Response(u.Item2));
+                    await server.safeSendMessage(amc.channel, wmls.Response(u.Item2));
                 }
             };
         }
@@ -94,11 +94,11 @@ namespace borkbot
                 channel = server.getServer().TextChannels.FirstOrDefault(x => x.Name == res[0]);
             }
 
-            server.UserJoined += (s, u) =>
+            server.UserJoined += async (s, u) =>
             {
                 if (on && u.Guild.Id == server.getServer().Id && channel != null)
                 {
-                    server.safeSendMessage(channel, wmls.Response(u));
+                    await server.safeSendMessage(channel, wmls.Response(u));
                 }
             };
         }

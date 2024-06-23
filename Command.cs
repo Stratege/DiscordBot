@@ -56,10 +56,10 @@ namespace borkbot
         VirtualServer server;
         public string name;
         PrivilegeLevel priv;
-        Action<ServerMessage, string> cmd;
+        Func<ServerMessage, string, Task> cmd;
         public HelpMsgStrings helpmessage;
 
-        public Command(VirtualServer _server, string _name, Action<ServerMessage, string> _cmd, PrivilegeLevel _priv, HelpMsgStrings _helpmessage)
+        public Command(VirtualServer _server, string _name, Func<ServerMessage, string, Task> _cmd, PrivilegeLevel _priv, HelpMsgStrings _helpmessage)
         {
             server = _server;
             name = _name;
@@ -68,16 +68,31 @@ namespace borkbot
             cmd = _cmd;
         }
 
-        public void invoke(ServerMessage e, string m)
+        public Command(VirtualServer _server, string _name, Action<ServerMessage, string> _cmd, PrivilegeLevel _priv, HelpMsgStrings _helpmessage)
+        {
+            server = _server;
+            name = _name;
+            helpmessage = _helpmessage;
+            priv = _priv;
+            cmd = (e,m) => {
+                _cmd(e, m);
+                return Task.CompletedTask;
+            };
+        }
+
+
+        public Task invoke(ServerMessage e, string m)
         {
             if (checkPrivilege(e.Author, e.Channel))
             {
                 Console.WriteLine("Invoking " + m);
-                cmd(e, m);
+                return cmd(e, m);
             }
             else
+            {
                 Console.WriteLine(e.Author.Username + " has insufficient privileges for " + m);
-
+                return Task.CompletedTask;
+            }
         }
 
         public bool checkPrivilege(SocketUser u, ISocketMessageChannel c)
@@ -85,12 +100,17 @@ namespace borkbot
             return (priv == PrivilegeLevel.BotOwner && u.Id == botOwnerId) || (priv == PrivilegeLevel.BotAdmin && server.isAdmin(u,c)) || priv == PrivilegeLevel.Everyone;
         }
 
-        public static Command AdminCommand(VirtualServer _server, string _name, Action<ServerMessage, String> _cmd, HelpMsgStrings _helpmessage)
+        public static Command AdminCommand(VirtualServer _server, string _name, Func<ServerMessage, string, Task> _cmd, HelpMsgStrings _helpmessage)
         {
             return new Command(_server,_name,_cmd, PrivilegeLevel.BotAdmin, _helpmessage);
         }
 
-        public static Command OwnerCommand(VirtualServer _server, string _name, Action<ServerMessage, String> _cmd, HelpMsgStrings _helpmessage)
+        public static Command AdminCommand(VirtualServer _server, string _name, Action<ServerMessage, String> _cmd, HelpMsgStrings _helpmessage)
+        {
+            return new Command(_server, _name, _cmd, PrivilegeLevel.BotAdmin, _helpmessage);
+        }
+
+        public static Command OwnerCommand(VirtualServer _server, string _name, Func<ServerMessage, String, Task> _cmd, HelpMsgStrings _helpmessage)
         {
             return new Command(_server, _name, _cmd, PrivilegeLevel.BotOwner, _helpmessage);
         }

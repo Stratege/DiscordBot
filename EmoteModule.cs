@@ -101,10 +101,10 @@ namespace borkbot
             };
 
             // Listen to all incoming messages from the server
-            server.MessageRecieved += (s, e) =>
+            server.MessageRecieved += async (s, e) =>
             {
                 if (!on)
-                    return;
+                    return true;
 
                 List<Emote> usedEmotes = new List<Emote>();
 
@@ -124,10 +124,11 @@ namespace borkbot
                         }
                     }
                 }
+                return true;
             };
 
             // Count for reactions
-            server.ReactionAdded += (s, reaction) =>
+            server.ReactionAdded += async (s, reaction) =>
             {
                 if (!on)
                     return;
@@ -144,7 +145,7 @@ namespace borkbot
                 }
             };
 
-            server.ReactionRemoved += (s, reaction) =>
+            server.ReactionRemoved += async (s, reaction) =>
             {
                 if (!on)
                     return;

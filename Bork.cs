@@ -37,7 +37,7 @@ namespace borkbot
             if (frequency < 1)
                 frequency = 1;
             borklist = server.XMlDictSetup<ulong, List<String>>(borklistPath);
-            server.MessageRecieved += (s, e) =>
+            server.MessageRecieved += async (s, e) =>
             {
                 List<String> localborklist;
                 if (borklist.TryGetValue(e.Author.Id, out localborklist))
@@ -57,16 +57,17 @@ namespace borkbot
 
                             if (Emote.TryParse(y, out emote) && server.getServer().Emotes.Select(em => em.Id).Contains(emote.Id))
                             {
-                                e.msg.AddReactionAsync(emote);
+                                await e.msg.AddReactionAsync(emote);
                             }else
                             {
                                 //todo: figure out how to remove an emoji after adding it failed?
-                                e.msg.AddReactionAsync(new Emoji(y));
+                                await e.msg.AddReactionAsync(new Emoji(y));
                             }
                         }
                         count.Item1 = 0;
                     }
                 }
+                return true;
             };
         }
 

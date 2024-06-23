@@ -59,12 +59,12 @@ namespace borkbot
             uniqueProxyId = PersistantValue<ulong>.load(server, "proxyUniqueProxyId");
             chanIdWebhookIdToInit = new List<Tuple<ulong, ulong>>();
             
-            server.MessageRecieved += async (s, e) =>
+            Func<VirtualServer,ServerMessage,Task<bool>> f = async (VirtualServer s, ServerMessage e) =>
             {
                 if (e.msg.Content == "")
-                    return; //it's something other than a proxyable msg so we ignore it 
+                    return true; //it's something other than a proxyable msg so we ignore it 
                 if (chanIdToWebhookId.Count == 0)
-                    return;
+                    return true;
                 if (!booted)
                 {
                     booted = true;
@@ -95,7 +95,7 @@ namespace borkbot
                 }
                 var settingsChannelId = toRootSettingsChannelId(e.Channel);
                 if (!chanIdToWebhook.ContainsKey(settingsChannelId))
-                    return;
+                    return true;
                 if (!userIdToProxyData.ContainsKey(e.Author.Id))
                 {
                     if (channelsInRPMode.ContainsKey(settingsChannelId))
@@ -103,7 +103,7 @@ namespace borkbot
                         await server.safeSendMessage(e.Channel, e.Author.Mention+" This channel is in RP Mode only. Register a RP Proxy to talk in here (ask your botadmin to ensure proxy registration is in RP Mode).");
                         await e.msg.DeleteAsync();
                     }
-                    return;
+                    return false;
                 }
                 var ls = userIdToProxyData[e.Author.Id];
                 foreach(var x in ls)
@@ -113,8 +113,7 @@ namespace borkbot
                         var sendmsg = e.msg.Content.Substring(x.prefix.Length);
                         if (sendmsg == "")
                             continue;
-                        await replaceMsg(e, x, sendmsg.TrimStart(), true);
-                        return;
+                        return await replaceMsg(e, x, sendmsg.TrimStart(), true);
                     }
                 }
                 if(chanIDToAutoProxies.ContainsKey(settingsChannelId))
@@ -129,8 +128,7 @@ namespace borkbot
                             {
                                 if(ap.proxyId == p.proxyId)
                                 {
-                                    await replaceMsg(e, p, e.msg.Content, false);
-                                    return;
+                                    return await replaceMsg(e, p, e.msg.Content, false);
                                 }
                             }
                             found = ap;
@@ -146,9 +144,12 @@ namespace borkbot
                 {
                     await server.safeSendMessage(e.Channel, e.Author.Mention+" This channel is in RP Mode only. Use a RP Proxy to talk in here.");
                     await e.msg.DeleteAsync();
+                    return false;
                 }
-
+                return true;
             };
+
+            server.MessageRecieved += f;
 
             server.ChannelCreated += async (s, sgc) =>
             {
@@ -173,7 +174,7 @@ namespace borkbot
             return settingsChannel.Id;
         }
 
-        async Task replaceMsg(ServerMessage e, ProxyData x, string sendmsg, bool triggerCommands)
+        async Task<bool> replaceMsg(ServerMessage e, ProxyData x, string sendmsg, bool triggerCommands)
         {
             var settingsChannel = e.Channel;
             var stc = e.Channel as SocketThreadChannel;
@@ -216,15 +217,16 @@ namespace borkbot
                     //                    var eClone = new ServerMessage(e.Server, e.isDM, e.Channel, msgClone, e.Author);
                     var newMsg = await e.Channel.GetMessageAsync(mId);
                     var eClone = new ServerMessage(e.Server, e.isDM, e.Channel, newMsg as Discord.WebSocket.SocketUserMessage, e.Author);
-                    server.messageRecieved(eClone); //todo: proper wait
+                    await server.messageRecieved(eClone);
                 }
             }
             try
             {
                 await e.msg.DeleteAsync();
+                return false;
             }
             catch {}
-            return;
+            return true;
         }
 
         public override List<Command> getCommands()
@@ -251,36 +253,36 @@ namespace borkbot
             return ret;
         }
 
-        private void channelRPMode(ServerMessage e, string msg)
+        private async Task channelRPMode(ServerMessage e, string msg)
         {
             var settingsChannelId = toRootSettingsChannelId(e.Channel);
             if (channelsInRPMode.ContainsKey(settingsChannelId))
             {
                 channelsInRPMode.Remove(settingsChannelId);
-                server.safeSendMessage(e.Channel, "Channel is now not in RP Mode anymore");
+                await server.safeSendMessage(e.Channel, "Channel is now not in RP Mode anymore");
             }
             else
             {
                 channelsInRPMode.Add(settingsChannelId, true);
-                server.safeSendMessage(e.Channel, "Channel is now in RP Mode");
+                await server.safeSendMessage(e.Channel, "Channel is now in RP Mode");
             }
             channelsInRPMode.persist();
         }
 
-        private void rpMode(ServerMessage e, string msg)
+        private async Task rpMode(ServerMessage e, string msg)
         {
             var newMode = !isInRPMode.get();
             isInRPMode.set(newMode);
-            server.safeSendMessage(e.Channel, newMode ? "new proxy registrations will now be RP Proxies." : "new proxy registration will now be normal Proxies.");
+            await server.safeSendMessage(e.Channel, newMode ? "new proxy registrations will now be RP Proxies." : "new proxy registration will now be normal Proxies.");
         }
 
-        private void autoproxy(ServerMessage e, string msg)
+        private async Task autoproxy(ServerMessage e, string msg)
         {
             var remove = msg.Trim() == "";
             var idx = getEntryIndex(e, msg);
             if(!remove && idx == -1)
             {
-                server.safeSendMessage(e.Channel, "proxy not found");
+                await server.safeSendMessage(e.Channel, "proxy not found");
                 return;
             }
             var settingsChannelId = toRootSettingsChannelId(e.Channel);
@@ -289,7 +291,7 @@ namespace borkbot
             {
                 if(remove)
                 {
-                    server.safeSendMessage(e.Channel, "no autoproxy to remove");
+                    await server.safeSendMessage(e.Channel, "no autoproxy to remove");
                     return;
                 }
                 chanIDToAutoProxies.Add(settingsChannelId, new List<AutoProxies>());
@@ -308,11 +310,11 @@ namespace borkbot
                 }
                 if (pd != null) {
                     ls.Remove(pd);
-                    server.safeSendMessage(e.Channel, "autoproxy removed");
+                    await server.safeSendMessage(e.Channel, "autoproxy removed");
                 }
                 else
                 {
-                    server.safeSendMessage(e.Channel, "no autoproxy to remove");
+                    await server.safeSendMessage(e.Channel, "no autoproxy to remove");
                 }
             }
             else
@@ -337,30 +339,30 @@ namespace borkbot
                 pdNew.userId = e.Author.Id;
                 ls.Add(pdNew);
                 retMsg += "added new autoproxy";
-                server.safeSendMessage(e.Channel, retMsg);
+                await server.safeSendMessage(e.Channel, retMsg);
 
             }
             chanIDToAutoProxies.persist();
         }
 
-        private void setImage(ServerMessage e, string msg)
+        private async Task setImage(ServerMessage e, string msg)
         {
             var msgSplit = msg.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if(msgSplit.Length != 2)
             {
-                server.safeSendMessage(e.Channel, "need exactly 2 parameters in command");
+                await server.safeSendMessage(e.Channel, "need exactly 2 parameters in command");
                 return;
             }
             var idx = getEntryIndex(e, msgSplit[0]);
             if (idx == -1)
             {
-                server.safeSendMessage(e.Channel, "could not update image - could not find entry as either prefix or name");
+                await server.safeSendMessage(e.Channel, "could not update image - could not find entry as either prefix or name");
             }
             else
             {
                 userIdToProxyData[e.Author.Id][idx].image = msgSplit[1];
                 userIdToProxyData.persist();
-                server.safeSendMessage(e.Channel, "updated image for " + userIdToProxyData[e.Author.Id][idx].name);
+                await server.safeSendMessage(e.Channel, "updated image for " + userIdToProxyData[e.Author.Id][idx].name);
             }
         }
 

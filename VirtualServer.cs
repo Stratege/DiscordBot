@@ -39,7 +39,6 @@ namespace borkbot
         }
     }
 
-
     public class VirtualServer
     {
         internal Dictionary<String, Command> Commandlist;
@@ -200,70 +199,70 @@ namespace borkbot
 
 
         bool isShutdown = false;
-        internal EventHandler<SocketGuildUser> UserJoined;
-        internal EventHandler<ServerMessage> MessageRecieved;
-        internal EventHandler<Tuple<SocketGuild, SocketUser>> UserLeft;
-        internal EventHandler<Tuple<SocketGuildUser, SocketGuildUser>> UserUpdated;
-        internal EventHandler<SocketReaction> ReactionAdded;
-        internal EventHandler<SocketReaction> ReactionRemoved;
-        internal EventHandler<Tuple<SocketRole, SocketRole>> RoleUpdated;
-        internal EventHandler<SocketRole> RoleDeleted;
-        internal EventHandler<SocketThreadChannel> ThreadCreated;
-        internal EventHandler<SocketGuildChannel> ChannelCreated;
+        internal AsyncEventHandler<VirtualServer,SocketGuildUser> UserJoined = new AsyncEventHandler<VirtualServer, SocketGuildUser>();
+        internal AsyncEventHandler<VirtualServer,ServerMessage,bool> MessageRecieved = new AsyncEventHandler<VirtualServer, ServerMessage, bool>();
+        internal AsyncEventHandler<VirtualServer, Tuple<SocketGuild, SocketUser>> UserLeft = new AsyncEventHandler<VirtualServer, Tuple<SocketGuild, SocketUser>>();
+        internal AsyncEventHandler<VirtualServer, Tuple<SocketGuildUser, SocketGuildUser>> UserUpdated = new AsyncEventHandler<VirtualServer, Tuple<SocketGuildUser, SocketGuildUser>>();
+        internal AsyncEventHandler<VirtualServer, SocketReaction> ReactionAdded = new AsyncEventHandler<VirtualServer, SocketReaction>();
+        internal AsyncEventHandler<VirtualServer, SocketReaction> ReactionRemoved = new AsyncEventHandler<VirtualServer, SocketReaction>();
+        internal AsyncEventHandler<VirtualServer, Tuple<SocketRole, SocketRole>> RoleUpdated = new AsyncEventHandler<VirtualServer, Tuple<SocketRole, SocketRole>>();
+        internal AsyncEventHandler<VirtualServer, SocketRole> RoleDeleted = new AsyncEventHandler<VirtualServer, SocketRole>();
+        internal AsyncEventHandler<VirtualServer, SocketThreadChannel> ThreadCreated = new AsyncEventHandler<VirtualServer, SocketThreadChannel>();
+        internal AsyncEventHandler<VirtualServer, SocketGuildChannel> ChannelCreated = new AsyncEventHandler<VirtualServer, SocketGuildChannel>();
 
-        public void reactionAdded(SocketReaction reaction)
+        public async Task reactionAdded(SocketReaction reaction)
         {
-            ReactionAdded.Invoke(this, reaction);
+            await ReactionAdded.Invoke(this, reaction);
         }
 
-        public void reactionRemoved(SocketReaction reaction)
+        public async Task reactionRemoved(SocketReaction reaction)
         {
-            ReactionRemoved.Invoke(this, reaction);
+            await ReactionRemoved.Invoke(this, reaction);
         }
 
-        public void userJoined(SocketGuildUser e)
+        public async Task userJoined(SocketGuildUser e)
         {
-            UserJoined.Invoke(this, e);
+            await UserJoined.Invoke(this, e);
         }
 
-        public void channelCreated(SocketGuildChannel sgc)
+        public async Task channelCreated(SocketGuildChannel sgc)
         {
-            ChannelCreated.Invoke(this, sgc);
+            await ChannelCreated.Invoke(this, sgc);
         }
 
-        internal void userLeft(SocketGuild guild, SocketUser user)
+        internal async Task userLeft(SocketGuild guild, SocketUser user)
         {
-            UserLeft.Invoke(this, Tuple.Create(guild, user));
+            await UserLeft.Invoke(this, Tuple.Create(guild, user));
         }
 
-        internal void userUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
+        internal async Task userUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
         {
-            UserUpdated.Invoke(this, Tuple.Create(oldUser,newUser));
+            await UserUpdated.Invoke(this, Tuple.Create(oldUser,newUser));
         }
 
-        internal void roleUpdated(SocketRole oldRole, SocketRole newRole)
+        internal async Task roleUpdated(SocketRole oldRole, SocketRole newRole)
         {
-            RoleUpdated.Invoke(this, Tuple.Create(oldRole,newRole));
+            await RoleUpdated.Invoke(this, Tuple.Create(oldRole,newRole));
         }
 
-        internal void roleDeleted(SocketRole role)
+        internal async Task roleDeleted(SocketRole role)
         {
-            RoleDeleted.Invoke(this, role);
+            await RoleDeleted.Invoke(this, role);
         }
 
         //Todo: Create unified notion of channel settings
-        internal void threadCreated(SocketThreadChannel stc)
+        internal async Task threadCreated(SocketThreadChannel stc)
         {
-            ThreadCreated.Invoke(this, stc);
+            await ThreadCreated.Invoke(this, stc);
         }
 
-        void shutdown(ServerMessage e, String m)
+        async Task shutdown(ServerMessage e, String m)
         {
             isShutdown = !isShutdown;
             if (isShutdown)
-                safeSendMessage(e.Channel, "Shutting down.");
+                await safeSendMessage(e.Channel, "Shutting down.");
             else
-                safeSendMessage(e.Channel, "Back online.");
+                await safeSendMessage(e.Channel, "Back online.");
         }
 
 
@@ -279,7 +278,7 @@ namespace borkbot
             return new string(k);
         }
 
-        void help(ServerMessage e, String m)
+        async Task help(ServerMessage e, String m)
         {
             /*            var eb = new EmbedBuilder();
                         eb = eb.WithAuthor("The Overbork", this.DC.CurrentUser.GetAvatarUrl()).WithCurrentTimestamp().WithTitle("Help");
@@ -299,12 +298,12 @@ namespace borkbot
             Command com;
             if (parts.Length > 0 && Commandlist.TryGetValue(parts[0],out com) && shouldDisplayHelp(com,e.Author,e.Channel))
             {
-                safeSendEmbed(e.Channel, com.getHelpMessageEmbed());
+                await safeSendEmbed(e.Channel, com.getHelpMessageEmbed());
             }else
             {
                 var eb = new Discord.EmbedBuilder().WithAuthor("The Overbork", this.DC.CurrentUser.GetAvatarUrl()).WithCurrentTimestamp();
                 eb.WithTitle("Available commands").WithDescription("This is a list of all commands currently available to you. For help with a particular command, try !help followed by that command name. ```" + getCommandListForUser(e.Author, e.Channel) + "```");
-                safeSendEmbed(e.Channel, eb.Build());
+                await safeSendEmbed(e.Channel, eb.Build());
             }
         }
 
@@ -387,7 +386,7 @@ namespace borkbot
                     if(!t.HasJoined)
                     {
                         await t.JoinAsync();
-                        ThreadCreated.Invoke(this,t);
+                        await ThreadCreated.Invoke(this,t);
                     }
                 }
             }
@@ -403,6 +402,18 @@ namespace borkbot
 
             if (e.Author == null)
                 return;
+
+            //call all our things that listen to recieved messages directly
+            var m = MessageRecieved.Fold<Task<bool>>((x, f) => {
+                return async (o, t) => {
+                    var b = await x(o, t);
+                    if (!b) return b;
+                    return await f(o, t);
+                };
+            }, (o, t) => Task.FromResult(true));
+            var shouldContinue = await m(this, e);
+            if (!shouldContinue) return; //something has handled the msg in a way that says we should not handle it via command handler
+
             if (!e.Author.IsWebhook && !e.Author.IsBot && (e.msg.MentionedUsers.Count(x => x.Id == DC.CurrentUser.Id) > 0 || (altCommand.isOn && e.msg.Content.StartsWith(altCommand.alternativeSyntax))))
             {
                 var res = parseMessage(e.msg.Content);
@@ -417,7 +428,7 @@ namespace borkbot
                         if(/*!e.Author.GuildPermissions.MentionEveryone && */ gc != null && !e.Author.GetPermissions(gc).MentionEveryone)
                             payload = payload.Replace("@everyone", "ATeveryone").Replace("@here", "AThere");
 
-                        Commandlist[res.Item1].invoke(e, payload);
+                        await Commandlist[res.Item1].invoke(e, payload);
                     }
                 }
                 catch (Exception exp)
@@ -425,9 +436,6 @@ namespace borkbot
                     Console.WriteLine(exp);
                 }
             }
-            //also call all our things that listen to recieved messages directly
-            MessageRecieved.Invoke(this,e);
-
         }
 
         public bool isAdmin(SocketUser user, ISocketMessageChannel channel)

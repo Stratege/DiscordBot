@@ -76,7 +76,7 @@ namespace borkbot
         public Scryfall(VirtualServer _server) : base(_server)
         {
             HttpClient = new HttpClient();
-            server.MessageRecieved += (e, m) =>
+            server.MessageRecieved += async (e, m) =>
             {
                 string msg = m.msg.Content;
                 var idxStart = msg.IndexOf("[[");
@@ -86,9 +86,10 @@ namespace borkbot
                     if(idxEnd != -1)
                     {
                         var substr = msg.Substring(idxStart + 2, idxEnd - idxStart - 2);
-                        lookup(m, substr);
+                        await lookup(m, substr);
                     }
                 }
+                return true;
             };
         }
         public override List<Command> getCommands()
