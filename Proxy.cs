@@ -167,7 +167,7 @@ namespace borkbot
             var stc = chan as SocketThreadChannel;
             if (stc != null)
             {
-                settingsChannel = (SocketTextChannel)stc.ParentChannel;
+                return stc.ParentChannel.Id;
             }
             return settingsChannel.Id;
         }
@@ -478,10 +478,21 @@ namespace borkbot
 
         }
 
-        private async System.Threading.Tasks.Task makeHook(Discord.WebSocket.SocketTextChannel c)
+        private async System.Threading.Tasks.Task makeHook(SocketGuildChannel c)
         {
             Console.WriteLine("Adding " + c.Name);
-            var hook = await c.CreateWebhookAsync("borkbothook");
+            Discord.Rest.RestWebhook hook;
+            if (c is SocketTextChannel stc)
+            {
+                hook = await stc.CreateWebhookAsync("borkbothook");
+            }else if(c is SocketForumChannel sfc)
+            {
+                hook = await sfc.CreateWebhookAsync("borkbothook");
+            }
+            else
+            {
+                throw new Exception("type error: " + c);
+            }
             chanIdToWebhookId.Add(c.Id, hook.Id);
             if (booted)
             {
@@ -494,29 +505,60 @@ namespace borkbot
             var s = server.getServer();
             uint newHooks = 0;
             uint totalHooks = 0;
-            foreach (var c in s.TextChannels)
+            foreach (var c_ in s.TextChannels)
             {
-                if (!chanIdToWebhookId.ContainsKey(c.Id) && s.CurrentUser.GetPermissions(c).ManageWebhooks)
+                SocketGuildChannel c = c_;
+                while (c is SocketThreadChannel stc)
                 {
-//                    if (c as SocketVoiceChannel != null)
-//                        continue;
-                    var existingHooks = await c.GetWebhooksAsync();
-                    Console.WriteLine("Checking " + c.Name);
-                    bool found = false;
-                    foreach (var eh in existingHooks)
+                    if(stc.ParentChannel is SocketTextChannel pstc)
                     {
-                        if(eh.Creator.Id == server.DC.CurrentUser.Id)
-                        {
-                            chanIdToWebhookId.Add(c.Id,eh.Id);
-                            totalHooks++;
-                            found = true;
-                            break;
-                        }
+                        Console.WriteLine("Replacing " + c.Name + " with parent " + pstc.Name);
+                        c = pstc;
                     }
-                    if (found) continue;
-                    await makeHook(c);
-                    newHooks++;
-                    totalHooks++;
+                    if(stc.ParentChannel is SocketForumChannel psfc)
+                    {
+                        Console.WriteLine("Replacing " + c.Name + " with parent forum " + psfc.Name);
+                        c = psfc;
+                    }
+                }
+                //todo: remove the bypass for managewebhooks check once discord.net has the permission check fix for forum channels built in
+                if (!chanIdToWebhookId.ContainsKey(c.Id) && ((c is SocketForumChannel) || s.CurrentUser.GetPermissions(c).ManageWebhooks))
+                {
+                    //                    if (c as SocketVoiceChannel != null)
+                    //                        continue;
+                    try
+                    {
+                        Console.WriteLine("Checking " + c.Name);
+                        IReadOnlyCollection<Discord.Rest.RestWebhook> existingHooks;
+                        if (c is SocketTextChannel stc) {
+                            existingHooks = await stc.GetWebhooksAsync();
+                        }else if(c is SocketForumChannel sfc)
+                        {
+                            existingHooks = await sfc.GetWebhooksAsync();
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                        bool found = false;
+                        foreach (var eh in existingHooks)
+                        {
+                            if (eh.Creator.Id == server.DC.CurrentUser.Id)
+                            {
+                                chanIdToWebhookId.Add(c.Id, eh.Id);
+                                totalHooks++;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (found) continue;
+                        await makeHook(c);
+                        newHooks++;
+                        totalHooks++;
+                    } catch (Exception ex)
+                    {
+                        Console.WriteLine("Unable to make webhook for " + c.Name + " error: " + ex);
+                    }
                 }else if (chanIdToWebhookId.ContainsKey(c.Id))
                 {
                     totalHooks++;
