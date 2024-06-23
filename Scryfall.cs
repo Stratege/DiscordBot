@@ -111,7 +111,7 @@ namespace borkbot
             }
         }
 
-        private async void scryupdate(ServerMessage e, string msg)
+        private async Task scryupdate(ServerMessage e, string msg)
         {
             var success = await ScryfallGlobalDB.Instance.Update(HttpClient);
             if (!success)
@@ -120,7 +120,7 @@ namespace borkbot
                 await server.safeSendMessage(e.Channel,"successful db update");
         }
 
-        private async void lookup(ServerMessage e, string msg)
+        private async Task lookup(ServerMessage e, string msg)
         {
             //todo: sanitize msg
             if(msg == null || msg == "")

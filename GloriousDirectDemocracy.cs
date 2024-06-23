@@ -458,7 +458,7 @@ namespace borkbot
             }
         }
 
-        private async void proposalComplete(Proposal prop, ulong propId)
+        private async Task proposalComplete(Proposal prop, ulong propId)
         {
             if (this.Proposals.Remove(propId))
             {
@@ -706,7 +706,7 @@ namespace borkbot
         }
 
 
-        private async void proposalMsgUpdate(Proposal prop, bool isArchived, ulong Id)
+        private async Task proposalMsgUpdate(Proposal prop, bool isArchived, ulong Id)
         {
             //todo: rate limiting
             if (prop.Started) //safety

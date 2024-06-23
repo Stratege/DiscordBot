@@ -13,6 +13,7 @@ using System.Text;
 using System.Linq;
 using System.Reflection;
 using Discord.WebSocket;
+using System.Threading.Tasks;
 
 namespace borkbot
 {
@@ -172,7 +173,7 @@ namespace borkbot
             return settingsChannel.Id;
         }
 
-        async System.Threading.Tasks.Task replaceMsg(ServerMessage e, ProxyData x, string sendmsg, bool triggerCommands)
+        async Task replaceMsg(ServerMessage e, ProxyData x, string sendmsg, bool triggerCommands)
         {
             var settingsChannel = e.Channel;
             var stc = e.Channel as SocketThreadChannel;
@@ -363,7 +364,7 @@ namespace borkbot
             }
         }
 
-        private async void addProxy(ServerMessage e, string msg)
+        private async Task addProxy(ServerMessage e, string msg)
         {
             var msgSplit = msg.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if(msgSplit.Length != 2)
@@ -413,7 +414,7 @@ namespace borkbot
             return userIdToProxyData[e.Author.Id].FindIndex(x => x.prefix == msgMod || x.name.ToLower() == msgMod);
         }
 
-        private async void removeProxy(ServerMessage e, string msg)
+        private async Task removeProxy(ServerMessage e, string msg)
         {
             if (!userIdToProxyData.ContainsKey(e.Author.Id))
             {
@@ -435,7 +436,7 @@ namespace borkbot
             }
         }
 
-        private async void deleteLastMsg(ServerMessage e, string msg)
+        private async Task deleteLastMsg(ServerMessage e, string msg)
         {
             if (!userIdToProxyData.ContainsKey(e.Author.Id))
             {
@@ -478,7 +479,7 @@ namespace borkbot
 
         }
 
-        private async System.Threading.Tasks.Task makeHook(SocketGuildChannel c)
+        private async Task makeHook(SocketGuildChannel c)
         {
             Console.WriteLine("Adding " + c.Name);
             Discord.Rest.RestWebhook hook;
@@ -500,7 +501,7 @@ namespace borkbot
             }
         }
 
-        private async void initProxy(ServerMessage e, string msg)
+        private async Task initProxy(ServerMessage e, string msg)
         {
             var s = server.getServer();
             uint newHooks = 0;

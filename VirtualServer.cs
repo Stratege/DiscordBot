@@ -393,12 +393,12 @@ namespace borkbot
             }
         }
 
-        public void messageRecieved(ServerMessage e)
+        public async Task messageRecieved(ServerMessage e)
         {
             if(!threadResyncDone)
             {
                 threadResyncDone = true;
-                resyncThreads();
+                await resyncThreads();
             }
 
             if (e.Author == null)
