@@ -36,7 +36,10 @@ namespace borkbot
 
         public async Task<bool> Update(HttpClient HttpClient)
         {
-            var ret = JObject.Parse(await(await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.scryfall.com/catalog/card-names"))).Content.ReadAsStringAsync());
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://api.scryfall.com/catalog/card-names");
+            request.Headers.Add("User-Agent", "Borkbot/1.0");
+            request.Headers.Add("Accept", "application/json");
+            var ret = JObject.Parse(await(await HttpClient.SendAsync(request)).Content.ReadAsStringAsync());
             var data = ret.Value<JArray>("data");
             if (data == null) return false;
             var str = data.Select(x => x.ToString());
@@ -163,7 +166,10 @@ namespace borkbot
         private async Task lookupInternalComplex(ServerMessage e, string msg)
         {
             rateLimit();
-            var ret = await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.scryfall.com/cards/search?q=" + Uri.EscapeDataString(msg)));
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://api.scryfall.com/cards/search?q=" + Uri.EscapeDataString(msg));
+            request.Headers.Add("User-Agent", "Borkbot/1.0");
+            request.Headers.Add("Accept", "application/json");
+            var ret = await HttpClient.SendAsync(request);
             var json = JObject.Parse(await ret.Content.ReadAsStringAsync());
             var retStatus = json.Value<int?>("status");
             if (retStatus != null)
@@ -200,7 +206,10 @@ namespace borkbot
         private async Task lookupInternal(ServerMessage e, string msg, bool lastChance)
         {
             rateLimit();
-            var ret = await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.scryfall.com/cards/named?fuzzy=" + msg));
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://api.scryfall.com/cards/named?fuzzy=" + msg);
+            request.Headers.Add("User-Agent", "Borkbot/1.0");
+            request.Headers.Add("Accept", "application/json");
+            var ret = await HttpClient.SendAsync(request);
             var json = JObject.Parse(await ret.Content.ReadAsStringAsync());
             var retStatus = json.Value<int?>("status");
             if (retStatus != null)
