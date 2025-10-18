@@ -200,7 +200,7 @@ namespace borkbot
 
         bool isShutdown = false;
         internal AsyncEventHandler<VirtualServer,SocketGuildUser> UserJoined = new AsyncEventHandler<VirtualServer, SocketGuildUser>();
-        internal AsyncEventHandler<VirtualServer,ServerMessage,bool> MessageRecieved = new AsyncEventHandler<VirtualServer, ServerMessage, bool>();
+        internal AsyncEventHandler<VirtualServer,Tuple<ServerMessage,string>,bool> MessageRecieved = new AsyncEventHandler<VirtualServer, Tuple<ServerMessage,string>, bool>();
         internal AsyncEventHandler<VirtualServer, Tuple<SocketGuild, SocketUser>> UserLeft = new AsyncEventHandler<VirtualServer, Tuple<SocketGuild, SocketUser>>();
         internal AsyncEventHandler<VirtualServer, Tuple<SocketGuildUser, SocketGuildUser>> UserUpdated = new AsyncEventHandler<VirtualServer, Tuple<SocketGuildUser, SocketGuildUser>>();
         internal AsyncEventHandler<VirtualServer, SocketReaction> ReactionAdded = new AsyncEventHandler<VirtualServer, SocketReaction>();
@@ -411,12 +411,12 @@ namespace borkbot
                     return await f(o, t);
                 };
             }, (o, t) => Task.FromResult(true));
-            var shouldContinue = await m(this, e);
+            var shouldContinue = await m(this, Tuple.Create(e,msgContent));
             if (!shouldContinue) return; //something has handled the msg in a way that says we should not handle it via command handler
 
-            if (!e.Author.IsWebhook && !e.Author.IsBot && (e.msg.MentionedUsers.Count(x => x.Id == DC.CurrentUser.Id) > 0 || (altCommand.isOn && e.msg.Content.StartsWith(altCommand.alternativeSyntax))))
+            if (!e.Author.IsWebhook && !e.Author.IsBot && (e.msg.MentionedUsers.Count(x => x.Id == DC.CurrentUser.Id) > 0 || (altCommand.isOn && msgContent.StartsWith(altCommand.alternativeSyntax))))
             {
-                var res = parseMessage(e.msg.Content);
+                var res = parseMessage(msgContent);
                 if (res != null)
                     Console.WriteLine(res.Item1 + " - " + res.Item2);
                 try

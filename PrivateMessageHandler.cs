@@ -34,7 +34,7 @@ namespace borkbot
         }
 
 
-        public void messageRecieved(SocketUserMessage e, bool retry = true)
+        public async Task messageRecieved(SocketUserMessage e, bool retry = true)
         {
             try
             {
@@ -62,9 +62,9 @@ namespace borkbot
                         if (user != null)
                         {
                             Console.WriteLine("accepting PM");
-                            var convertedMsg = new ServerMessage(curServ.getServer(), true, e.Channel, e, user);
+                            var convertedMsg = new ServerMessage(curServ.getServer(), true, false, e.Channel, e, user);
 
-                            curServ.messageRecieved(convertedMsg);
+                            await curServ.messageRecieved(convertedMsg);
                             return;
                         }
                         else
@@ -91,7 +91,7 @@ namespace borkbot
                     SetUserServerMapping(e.Author.Id, x[0].getServer().Id);
                     //we retry once
                     if(retry)
-                        messageRecieved(e,false);
+                        await messageRecieved(e,false);
                     else
                     {
                         safeSendPM((SocketDMChannel)e.Channel, "There was an issue with setting your server context automatically, please report it to the maintainer.");

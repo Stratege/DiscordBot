@@ -62,29 +62,39 @@ namespace borkbot
 
             });
 
-            Func<SocketMessage,Task> msgReceivedHandling = async (SocketMessage msg) =>
+            Func<SocketMessage,Task> msgReceivedHandling = (SocketMessage msg) =>
                 {
-                    //we ignore our own messages
-                    if (msg.Author.Id == DC.CurrentUser.Id)
-                        return;
-                    if (msg.GetType() == typeof(SocketUserMessage))
+                    Task.Run(async () =>
                     {
-                        if (msg.Channel.GetType() == typeof(SocketDMChannel))
+                        try
                         {
-                            Console.WriteLine("Got private message by " + msg.Author.Username);
-                            pmHandler.messageRecieved((SocketUserMessage)msg);
-                        }
-                        else
+                            //we ignore our own messages
+                            if (msg.Author.Id == DC.CurrentUser.Id)
+                                return;
+                            if (msg.GetType() == typeof(SocketUserMessage))
+                            {
+                                if (msg.Channel.GetType() == typeof(SocketDMChannel))
+                                {
+                                    Console.WriteLine("Got private message by " + msg.Author.Username);
+                                    await pmHandler.messageRecieved((SocketUserMessage)msg);
+                                }
+                                else
+                                {
+                                    SocketTextChannel stc = (SocketTextChannel)msg.Channel;
+                                    var convertedMsg = new ServerMessage(stc.Guild, false, false, stc, (SocketUserMessage)msg, stc.Guild.GetUser(msg.Author.Id));
+                                    await servers[stc.Guild.Id].messageRecieved(convertedMsg);
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Did not handle non-user msg: " + msg);
+                            }
+                        } catch (Exception e)
                         {
-                            SocketTextChannel stc = (SocketTextChannel)msg.Channel;
-                            var convertedMsg = new ServerMessage(stc.Guild, false, stc, (SocketUserMessage)msg, stc.Guild.GetUser(msg.Author.Id));
-                            servers[stc.Guild.Id].messageRecieved(convertedMsg);
+                            Console.WriteLine("Exception MsgReceivedHandling: " + e);
                         }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Did not handle non-user msg: " + msg);
-                    }
+                    });
+                    return Task.CompletedTask;
                 };
 
             DC.MessageReceived += msgReceivedHandling;
@@ -153,7 +163,6 @@ namespace borkbot
                 }*/
                 return Task.FromResult<object>(null);
             };
-
 
             DC.MessageDeleted += (msg, origin) =>
             {

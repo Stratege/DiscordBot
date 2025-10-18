@@ -95,7 +95,7 @@ namespace borkbot
             }
         }
 
-        public bool checkPrivilege(SocketUser u, ISocketMessageChannel c)
+        public bool checkPrivilege(SocketUser u, Discord.IChannel c)
         {
             return (priv == PrivilegeLevel.BotOwner && u.Id == botOwnerId) || (priv == PrivilegeLevel.BotAdmin && server.isAdmin(u,c)) || priv == PrivilegeLevel.Everyone;
         }

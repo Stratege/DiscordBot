@@ -101,8 +101,10 @@ namespace borkbot
             };
 
             // Listen to all incoming messages from the server
-            server.MessageRecieved += async (s, e) =>
+            server.MessageRecieved += async (s, t) =>
             {
+                var e = t.Item1;
+                var m = t.Item2;
                 if (!on)
                     return true;
 

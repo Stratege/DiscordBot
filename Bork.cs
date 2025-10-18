@@ -37,8 +37,10 @@ namespace borkbot
             if (frequency < 1)
                 frequency = 1;
             borklist = server.XMlDictSetup<ulong, List<String>>(borklistPath);
-            server.MessageRecieved += async (s, e) =>
+            server.MessageRecieved += async (s, t) =>
             {
+                var e = t.Item1;
+                var m = t.Item2;
                 List<String> localborklist;
                 if (borklist.TryGetValue(e.Author.Id, out localborklist))
                 {
