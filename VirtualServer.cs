@@ -26,13 +26,15 @@ namespace borkbot
     {
         public SocketGuild Server;
         public bool isDM;
+        public bool isProxy;
         public ISocketMessageChannel Channel; //guild text channel or DM channel
         public SocketUserMessage msg;
         public SocketGuildUser Author;
-        public ServerMessage(SocketGuild _Server, bool _isDM, ISocketMessageChannel _Channel, SocketUserMessage _msg, SocketGuildUser _Author)
+        public ServerMessage(SocketGuild _Server, bool _isDM, bool _isProxy, ISocketMessageChannel _Channel, SocketUserMessage _msg, SocketGuildUser _Author)
         {   
             Server = _Server;
             isDM = _isDM;
+            isProxy = _isProxy;
             Channel = _Channel;
             msg = _msg;
             Author = _Author;
