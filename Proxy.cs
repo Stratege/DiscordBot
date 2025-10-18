@@ -616,7 +616,7 @@ namespace borkbot
             }
             var proxies = userIdToProxyData[e.Author.Id];
             var response = proxies.Select(x => "prefix: " + x.prefix + ", name: " + x.name + ", imageurl: " + x.image + ", isRP: " + x.isRP).Aggregate((a,b) => a+"\n"+b);
-            await server.safeSendMessage(e.Channel, response);
+            await server.safeSendMessage(e.Channel, response, true);
         }
 
     }
