@@ -347,6 +347,10 @@ namespace borkbot
                 Console.WriteLine("something tried to send an illegal message: " + m);
                 return null;
             }
+            if(!splitMessage && m.Length >= 2000)
+            {
+                return await stc.SendMessageAsync("Response too large - aborting");
+            }
             while(splitMessage && m.Length >= 2000)
             {
                 await safeSendMessage(c, m.Substring(0, 1999), false);
