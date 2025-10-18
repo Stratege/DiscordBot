@@ -405,6 +405,12 @@ namespace borkbot
             if (e.Author == null)
                 return;
 
+            var msgContent = e.msg.Content;
+            var gc = e.Channel as SocketTextChannel;
+            if (/*!e.Author.GuildPermissions.MentionEveryone && */ gc != null && !e.Author.GetPermissions(gc).MentionEveryone)
+                msgContent = msgContent.Replace("@everyone", "ATeveryone").Replace("@here", "AThere");
+
+
             //call all our things that listen to recieved messages directly
             var m = MessageRecieved.Fold<Task<bool>>((x, f) => {
                 return async (o, t) => {
@@ -426,9 +432,7 @@ namespace borkbot
                     if (res != null)
                     {
                         var payload = res.Item2;
-                        var gc = e.Channel as SocketTextChannel;
-                        if(/*!e.Author.GuildPermissions.MentionEveryone && */ gc != null && !e.Author.GetPermissions(gc).MentionEveryone)
-                            payload = payload.Replace("@everyone", "ATeveryone").Replace("@here", "AThere");
+
 
                         await Commandlist[res.Item1].invoke(e, payload);
                     }
@@ -440,15 +444,13 @@ namespace borkbot
             }
         }
 
-        public bool isAdmin(SocketUser user, ISocketMessageChannel channel)
+        public bool isAdmin(SocketUser user, IChannel channel)
         {
-            if (channel.GetType() == typeof(SocketDMChannel)) {
-                if ((server.GetUser(user.Id).GuildPermissions.Administrator || Admins.Contains(user.Id.ToString())))
-                    return true;
-                else
-                    return false;
-            }else if (channel.GetType() == typeof(SocketTextChannel) || channel.GetType() == typeof(SocketVoiceChannel)) {
-                var stc = (SocketTextChannel)channel;
+            var type = channel.GetType();
+            if (type == typeof(SocketDMChannel)) {
+                // nothing special needs to be done
+            }else if (type == typeof(SocketTextChannel) || type == typeof(SocketVoiceChannel) || type == typeof(SocketForumChannel)) {
+                var stc = (SocketGuildChannel)channel;
                 if (stc.Guild == null || server == null)
                 {
                     Console.WriteLine("isAdmin check with one server being null!");
@@ -456,18 +458,15 @@ namespace borkbot
                 }
                 if (stc.Guild.Id != server.Id)
                     return false;
-                if (server.GetUser(user.Id).GuildPermissions.Administrator)
-                    return true;
-                if (Admins.Contains(user.Id.ToString()))
-                    return true;
-                return false;
-            }else if(channel.GetType() == typeof(SocketThreadChannel)) {
+            }else if(type == typeof(SocketThreadChannel)) {
                 var stc = (SocketThreadChannel)channel;
-                return isAdmin(user, (SocketTextChannel)stc.ParentChannel);
+                return isAdmin(user, stc.ParentChannel);
             }else{
-                Console.WriteLine("Got isAdmin check on channel type " + channel.GetType() + " this is atm unhandled");
+                Console.WriteLine("Got isAdmin check on channel type " + type + " this is atm unhandled");
                 return false;
             }
+
+            return ((server.GetUser(user.Id).GuildPermissions.Administrator || Admins.Contains(user.Id.ToString())));
         }
 
         Tuple<String, String> parseMessage(String m)
