@@ -43,93 +43,71 @@ namespace borkbot
             PrivateMessageHandler pmHandler = new PrivateMessageHandler(DC, servers);
 
             DC.ReactionAdded += async (a, b, reaction) =>
-            await Task.Run(() =>
             {
                 if (reaction.Channel is SocketTextChannel)
                 {
-                    servers[(reaction.Channel as SocketTextChannel).Guild.Id].reactionAdded(reaction);
+                    await servers[(reaction.Channel as SocketTextChannel).Guild.Id].reactionAdded(reaction);
                 }
 
-            });
+            };
 
-            DC.ReactionRemoved += async (a, b, reaction) =>
-            await Task.Run(() =>
+            DC.ReactionRemoved += async (a, b, reaction) => 
             {
                 if (reaction.Channel is SocketTextChannel)
                 {
-                    servers[(reaction.Channel as SocketTextChannel).Guild.Id].reactionRemoved(reaction);
+                    await servers[(reaction.Channel as SocketTextChannel).Guild.Id].reactionRemoved(reaction);
                 }
 
-            });
+            };
 
-            Func<SocketMessage,Task> msgReceivedHandling = (SocketMessage msg) =>
+            Func<SocketMessage,Task> msgReceivedHandling = async (SocketMessage msg) =>
                 {
-                    Task.Run(async () =>
+                    try
                     {
-                        try
+                        //we ignore our own messages
+                        if (msg.Author.Id == DC.CurrentUser.Id)
+                            return;
+                        if (msg.GetType() == typeof(SocketUserMessage))
                         {
-                            //we ignore our own messages
-                            if (msg.Author.Id == DC.CurrentUser.Id)
-                                return;
-                            if (msg.GetType() == typeof(SocketUserMessage))
+                            if (msg.Channel.GetType() == typeof(SocketDMChannel))
                             {
-                                if (msg.Channel.GetType() == typeof(SocketDMChannel))
-                                {
-                                    Console.WriteLine("Got private message by " + msg.Author.Username);
-                                    await pmHandler.messageRecieved((SocketUserMessage)msg);
-                                }
-                                else
-                                {
-                                    SocketTextChannel stc = (SocketTextChannel)msg.Channel;
-                                    var convertedMsg = new ServerMessage(stc.Guild, false, false, stc, (SocketUserMessage)msg, stc.Guild.GetUser(msg.Author.Id));
-                                    await servers[stc.Guild.Id].messageRecieved(convertedMsg);
-                                }
+                                Console.WriteLine("Got private message by " + msg.Author.Username);
+                                await pmHandler.messageRecieved((SocketUserMessage)msg);
                             }
                             else
                             {
-                                Console.WriteLine("Did not handle non-user msg: " + msg);
+                                SocketTextChannel stc = (SocketTextChannel)msg.Channel;
+                                var convertedMsg = new ServerMessage(stc.Guild, false, false, stc, (SocketUserMessage)msg, stc.Guild.GetUser(msg.Author.Id));
+                                await servers[stc.Guild.Id].messageRecieved(convertedMsg);
                             }
-                        } catch (Exception e)
-                        {
-                            Console.WriteLine("Exception MsgReceivedHandling: " + e);
                         }
-                    });
-                    return Task.CompletedTask;
+                        else
+                        {
+                            Console.WriteLine("Did not handle non-user msg: " + msg);
+                        }
+                    } catch (Exception e)
+                    {
+                        Console.WriteLine("Exception MsgReceivedHandling: " + e);
+                    }
                 };
 
             DC.MessageReceived += msgReceivedHandling;
-            DC.UserJoined += async (user) =>
-             await Task.Run(() =>
-             {
-                 servers[user.Guild.Id].userJoined(user);
-             });
-            DC.UserLeft += async (guild,user) =>
-             await Task.Run(() =>
-             {
-                 servers[guild.Id].userLeft(guild,user);
-             });
+            DC.UserJoined += async (user) => await servers[user.Guild.Id].userJoined(user);
+            DC.UserLeft += async (guild,user) => await servers[guild.Id].userLeft(guild,user);
 
-            DC.RoleUpdated += async (oldRole, newRole) =>
-            await Task.Run(() => {
-                servers[oldRole.Guild.Id].roleUpdated(oldRole, newRole);
-            });
-            DC.RoleDeleted += async (role) =>
-            await Task.Run(() => {
-                servers[role.Guild.Id].roleDeleted(role);
-            });
+            DC.RoleUpdated += async (oldRole, newRole) => await servers[oldRole.Guild.Id].roleUpdated(oldRole, newRole);
+            DC.RoleDeleted += async (role) => await servers[role.Guild.Id].roleDeleted(role);
 
             bool firstSetup = true;
-            DC.Ready += async () =>
+            DC.Ready += () =>
             {
                 Console.WriteLine("there?");
                 if (firstSetup)
                 {
-                    await Task.Run(() =>
-                    {
-                        Console.WriteLine("Battlebot operational");
-                        firstSetup = false;
-                    });
+                    Console.WriteLine("Battlebot operational");
+                    firstSetup = false;
                 }
+                return Task.CompletedTask;
             };
 
             DC.GuildAvailable += async (sg) =>
@@ -148,7 +126,7 @@ namespace borkbot
             DC.Connected += () =>
             {
                 Console.WriteLine("connected for real");
-                return Task.FromResult<object>(null);
+                return Task.CompletedTask;
             };
             DC.Log += (msg) =>
             {
@@ -161,7 +139,7 @@ namespace borkbot
                     //we just, you know, quit
                     System.Environment.Exit(0);
                 }*/
-                return Task.FromResult<object>(null);
+                return Task.CompletedTask;
             };
 
             DC.MessageDeleted += (msg, origin) =>
@@ -170,26 +148,20 @@ namespace borkbot
                     Console.WriteLine("Deleted Message was: " + origin + " " + msg.Value.Timestamp + " " + msg.Value.Author + ": " + msg.Value.Content);
                 else
                     Console.WriteLine("Deleted unknown message with Id: " + msg.Id);
-                return Task.FromResult<object>(null);
+                return Task.CompletedTask;
             };
 
             DC.ThreadCreated += async (stc) =>
             {
                 await stc.JoinAsync();
-                await Task.Run(() =>
-                {
-                    servers[stc.Guild.Id].threadCreated(stc);
-                });
+                await servers[stc.Guild.Id].threadCreated(stc);
             };
 
             DC.ChannelCreated += async (sc) =>
             {
                 var sgc = sc as SocketGuildChannel;
                 if (sgc != null) {
-                    await Task.Run(() =>
-                    {
-                        servers[sgc.Guild.Id].channelCreated(sgc);
-                    });
+                    await servers[sgc.Guild.Id].channelCreated(sgc);
                 }
             };
 
