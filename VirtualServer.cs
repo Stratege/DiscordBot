@@ -136,9 +136,9 @@ namespace borkbot
             server = newS;
         }
 
-        void addBotAdmin(ServerMessage e, String m)
+        async Task addBotAdmin(ServerMessage e, String m)
         {
-            adminAbstract(e, m, (mention, id, user) => {
+            await adminAbstract(e, m, (mention, id, user) => {
                 if (Admins.Contains(id.ToString()))
                     return user.Username + " is already an admin.";
                 else
@@ -153,9 +153,9 @@ namespace borkbot
             });
         }
 
-        void removeBotAdmin(ServerMessage e, String m)
+        async Task removeBotAdmin(ServerMessage e, String m)
         {
-            adminAbstract(e, m, (mention, id, user) =>
+            await adminAbstract(e, m, (mention, id, user) =>
             {
                 if (!Admins.Contains(id.ToString()))
                     return user.Username + " is not an admin.";
@@ -168,7 +168,7 @@ namespace borkbot
             });
         }
 
-        void adminAbstract(ServerMessage e, String m, Func<String, ulong, SocketUser, String> f)
+        async Task adminAbstract(ServerMessage e, String m, Func<String, ulong, SocketUser, String> f)
         {
             var users = e.msg.MentionedUsers.Where(x => !x.IsBot).Select(x => Tuple.Create(x.Mention, x.Id, x)).ToList();
             var message = "";
@@ -180,7 +180,7 @@ namespace borkbot
                 if (m2 != "")
                     message = m2;
             }
-            safeSendMessage(e.Channel, message);
+            await safeSendMessage(e.Channel, message);
         }
 
         void addCommands(List<Command> cmdls)
@@ -529,7 +529,7 @@ namespace borkbot
         }
 
 
-        public string toEmojiString(ServerMessage e, string m)
+        public async Task<string> toEmojiString(ServerMessage e, string m)
         {
             if (m.Length >= 4)
             {
@@ -544,7 +544,7 @@ namespace borkbot
                     }
                 }
             }
-            safeSendMessage(e.Channel, "Invalid Emoji: " + m);
+            await safeSendMessage(e.Channel, "Invalid Emoji: " + m);
             Console.WriteLine("invalid emoji: " + m);
             return null;
         }
