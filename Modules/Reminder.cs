@@ -2,7 +2,7 @@
  * 
  * also contains the various things needed for changing it
  * 
- * TODO: investigate if it has persistance?
+ * TODO: investigate if it has persistence?
  * TODO: improve parsing and reporting, currently does not handle #<channelname> and reminder list is not helpful
  */
 

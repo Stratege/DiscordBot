@@ -13,7 +13,7 @@ using System.Linq;
 using System.Threading;
 using Discord;
 using Discord.WebSocket;
-using DiscordBot.Persistance;
+using DiscordBot.Persistence;
 using DiscordBot.Utility;
 using AssocList = DiscordBot.Modules.LinkedList<System.Tuple<DiscordBot.Modules.Var, DiscordBot.Modules.QueryObj>>;
 
@@ -24,11 +24,11 @@ namespace DiscordBot.Modules
         static int millisecondMaxQueryLength = 2000;
         int curMaxMillisecondQueryLength = 0;
         QueryParser q = new QueryParser();
-        PersistantList storage;
+        PersistentList storage;
 
         public RunQuery(VirtualServer _server) : base(_server)
         {
-            storage = PersistantList.Create(server, "runquerystorage");
+            storage = PersistentList.Create(server, "runquerystorage");
         }
 
         public override List<Command> getCommands()
@@ -1037,7 +1037,7 @@ namespace DiscordBot.Modules
             throw new Exception("could not lookup: " + var.Name);
         }
 
-        public string eval(Stmt stmt, PersistantList storage)
+        public string eval(Stmt stmt, PersistentList storage)
         {
             string ret;
             try
@@ -1052,7 +1052,7 @@ namespace DiscordBot.Modules
             return ret;
         }
 
-        QueryObj evalStmt(Stmt stmt, PersistantList storage)
+        QueryObj evalStmt(Stmt stmt, PersistentList storage)
         {
             Func<Tuple<String, QueryObj>, Tuple<Var, QueryObj>> tupleProject = x =>
             {

@@ -1,4 +1,4 @@
-﻿using DiscordBot.Persistance;
+﻿using DiscordBot.Persistence;
 using DiscordBot.Utility;
 using System;
 using System.Collections.Generic;
@@ -9,10 +9,10 @@ namespace DiscordBot.Modules
 {
     internal class Wilderfeast : EnableableCommandModule
     {
-        PersistantDict<ulong, Dictionary<ulong, ulong>> gamesWithUserForUser;
+        PersistentDict<ulong, Dictionary<ulong, ulong>> gamesWithUserForUser;
         public Wilderfeast(VirtualServer _server) : base(_server, "Wilderfeast")
         {
-            gamesWithUserForUser = PersistantDict<ulong, Dictionary<ulong, ulong>>.load(server, "wfGamesWithUserForUser");
+            gamesWithUserForUser = PersistentDict<ulong, Dictionary<ulong, ulong>>.load(server, "wfGamesWithUserForUser");
         }
 
         public override List<Command> getCommands()

@@ -3,7 +3,7 @@
  * Primary Author: Yossarian
  */
 using Discord;
-using DiscordBot.Persistance;
+using DiscordBot.Persistence;
 using DiscordBot.Utility;
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,7 @@ namespace DiscordBot.Modules
     {
         #region Data Members
 
-        private PersistantDict<ulong, EmoteStats> _emotes;
+        private PersistentDict<ulong, EmoteStats> _emotes;
 
         private string _lastResetDate;
 
@@ -30,7 +30,7 @@ namespace DiscordBot.Modules
 
         #region Properties
 
-        internal PersistantDict<ulong, EmoteStats> Emotes
+        internal PersistentDict<ulong, EmoteStats> Emotes
         {
             get
             {
@@ -66,7 +66,7 @@ namespace DiscordBot.Modules
         /// <param name="_server"></param>
         public EmoteModule(VirtualServer _server) : base(_server, "emote")
         {
-            Emotes = PersistantDict<ulong, EmoteStats>.load(_server, "EmoteStats.xml");
+            Emotes = PersistentDict<ulong, EmoteStats>.load(_server, "EmoteStats.xml");
 
             // Get the last reset date
             var res = server.FileSetup(_resetDateFile);

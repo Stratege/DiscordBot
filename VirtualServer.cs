@@ -18,7 +18,7 @@ using Discord;
 using Discord.Rest;
 using DiscordBot.Utility;
 using DiscordBot.Modules;
-using DiscordBot.Persistance;
+using DiscordBot.Persistence;
 
 namespace DiscordBot
 {
@@ -64,7 +64,7 @@ namespace DiscordBot
         internal Dictionary<String, Command> Commandlist;
         SocketGuild server;
         public DiscordSocketClient DC;
-        public PersistantList Admins;
+        public PersistentList Admins;
         String adminfilePath = "admins.txt";
         string serverpath;
         AlternativeCommand altCommand;
@@ -86,7 +86,7 @@ namespace DiscordBot
                 virtualServerCommands.Add(new Command(this, "addbotadmin", addBotAdmin, PrivilegeLevel.BotAdmin, new HelpMsgStrings("", "addbotadmin <mention-target>")));
                 virtualServerCommands.Add(new Command(this, "removebotadmin", removeBotAdmin, PrivilegeLevel.BotAdmin, new HelpMsgStrings("", "removebotadmin <mention-target>")));
                 addCommands(virtualServerCommands);
-                Admins = PersistantList.Create(this,adminfilePath);
+                Admins = PersistentList.Create(this,adminfilePath);
                 var adminChannel = new AdminMessageChannel(this);
                 addCommands(adminChannel.getCommands());
                 addCommands(new Admingreet(this, adminChannel).getCommands());
@@ -97,7 +97,7 @@ namespace DiscordBot
                 addCommands(new Dice(this).getCommands());
                 addCommands(new Roulette(this).getCommands());
                 addCommands(new Echo(this).getCommands());
-                addCommands(new Math(this).getCommands());
+                addCommands(new Modules.Math(this).getCommands());
                 addCommands(new Bork(this).getCommands());
                 addCommands(new KillUserMessages(this).getCommands());
                 addCommands(new UntaggedUsers(this).getCommands());

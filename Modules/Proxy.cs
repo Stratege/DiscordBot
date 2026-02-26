@@ -9,7 +9,7 @@
 using Discord;
 using Discord.Webhook;
 using Discord.WebSocket;
-using DiscordBot.Persistance;
+using DiscordBot.Persistence;
 using DiscordBot.Utility;
 using System;
 using System.Collections.Generic;
@@ -39,25 +39,25 @@ namespace DiscordBot.Modules
 
     class Proxy : CommandHandler
     {
-        PersistantDict<ulong, ulong> chanIdToWebhookId;
+        PersistentDict<ulong, ulong> chanIdToWebhookId;
         Dictionary<ulong, DiscordWebhookClient> chanIdToWebhook;
-        PersistantDict<ulong, List<ProxyData>> userIdToProxyData;
+        PersistentDict<ulong, List<ProxyData>> userIdToProxyData;
         bool booted = false;
-        PersistantValue<bool> isInRPMode;
-        PersistantDict<ulong, bool> channelsInRPMode;
-        PersistantDict<ulong, List<AutoProxies>> chanIDToAutoProxies;
-        PersistantValue<ulong> uniqueProxyId;
+        PersistentValue<bool> isInRPMode;
+        PersistentDict<ulong, bool> channelsInRPMode;
+        PersistentDict<ulong, List<AutoProxies>> chanIDToAutoProxies;
+        PersistentValue<ulong> uniqueProxyId;
         List<Tuple<ulong, ulong>> chanIdWebhookIdToInit;
 
         public Proxy(VirtualServer _server) : base(_server)
         {
-            chanIdToWebhookId = PersistantDict<ulong, ulong>.load(server, "chanidtowebhook");
+            chanIdToWebhookId = PersistentDict<ulong, ulong>.load(server, "chanidtowebhook");
             chanIdToWebhook = new Dictionary<ulong, DiscordWebhookClient>();
-            userIdToProxyData = PersistantDict<ulong, List<ProxyData>>.load(server, "userIdToProxyData");
-            isInRPMode = PersistantValue<bool>.load(server, "proxyRPMode");
-            channelsInRPMode = PersistantDict<ulong, bool>.load(server, "proxyChannelsToRPModeSetting");
-            chanIDToAutoProxies = PersistantDict<ulong, List<AutoProxies>>.load(server, "proxyChanIdToAutoProxies");
-            uniqueProxyId = PersistantValue<ulong>.load(server, "proxyUniqueProxyId");
+            userIdToProxyData = PersistentDict<ulong, List<ProxyData>>.load(server, "userIdToProxyData");
+            isInRPMode = PersistentValue<bool>.load(server, "proxyRPMode");
+            channelsInRPMode = PersistentDict<ulong, bool>.load(server, "proxyChannelsToRPModeSetting");
+            chanIDToAutoProxies = PersistentDict<ulong, List<AutoProxies>>.load(server, "proxyChanIdToAutoProxies");
+            uniqueProxyId = PersistentValue<ulong>.load(server, "proxyUniqueProxyId");
             
             Func<VirtualServer,Tuple<ServerMessage,string>,Task<bool>> f = async (s, t) =>
             {

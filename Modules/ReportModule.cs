@@ -1,6 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using DiscordBot.Persistance;
+using DiscordBot.Persistence;
 using DiscordBot.Utility;
 using System;
 using System.Collections.Generic;
@@ -19,9 +19,9 @@ namespace DiscordBot.Modules
 
         private string _channelFile = "StrikeChannel.txt";
 
-        private PersistantList _bannedUsers;
+        private PersistentList _bannedUsers;
 
-        private PersistantList _reportUsers;
+        private PersistentList _reportUsers;
 
         private readonly object _lock = new object();
 
@@ -42,7 +42,7 @@ namespace DiscordBot.Modules
             }
         }
 
-        public PersistantList BannedUsers
+        public PersistentList BannedUsers
         {
             get
             {
@@ -55,7 +55,7 @@ namespace DiscordBot.Modules
             }
         }
 
-        public PersistantList ReportUsers
+        public PersistentList ReportUsers
         {
             get
             {
@@ -75,8 +75,8 @@ namespace DiscordBot.Modules
 
         public ReportModule(VirtualServer _server) : base(_server, "report")
         {
-            ReportUsers = PersistantList.Create(server, "ReportUsers.txt");
-            BannedUsers = PersistantList.Create(server, "ReportBannedUsers.txt");
+            ReportUsers = PersistentList.Create(server, "ReportUsers.txt");
+            BannedUsers = PersistentList.Create(server, "ReportBannedUsers.txt");
 
             // Report channel to send reports to
             var res = server.FileSetup(_channelFile);

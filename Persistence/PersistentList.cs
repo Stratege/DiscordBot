@@ -1,27 +1,27 @@
-﻿/* Contains PersistantList, a variant on a List with the logic to serialize and deserialize as needed
+﻿/* Contains PersistentList, a variant on a List with the logic to serialize and deserialize as needed
  */
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DiscordBot.Persistance
+namespace DiscordBot.Persistence
 {
-    public class PersistantList : IEnumerable<string>
+    public class PersistentList : IEnumerable<string>
     {
         List<string> content;
         string filename;
         VirtualServer server;
 
-        public PersistantList(List<string> content, string filename, VirtualServer server)
+        public PersistentList(List<string> content, string filename, VirtualServer server)
         {
             this.content = content;
             this.filename = filename;
             this.server = server;
         }
 
-        internal static PersistantList Create(VirtualServer server, string filename)
+        internal static PersistentList Create(VirtualServer server, string filename)
         {
             var content = server.FileSetup(filename);
-            return new PersistantList(content, filename, server);
+            return new PersistentList(content, filename, server);
         }
 
         public void Add(string elm)

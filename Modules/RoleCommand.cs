@@ -1,5 +1,5 @@
 ﻿using Discord.WebSocket;
-using DiscordBot.Persistance;
+using DiscordBot.Persistence;
 using DiscordBot.Utility;
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ namespace DiscordBot.Modules
         #region Data Members
 
         // Represents the whitelisted roles, saved in the file
-        private PersistantList whitelistedRoles;
+        private PersistentList whitelistedRoles;
 
         private string _timeoutFile = "TimeoutRole.txt";
 
@@ -29,7 +29,7 @@ namespace DiscordBot.Modules
 
         #region Properties
 
-        public PersistantList WhitelistedRoles
+        public PersistentList WhitelistedRoles
         {
             get
             {
@@ -65,7 +65,7 @@ namespace DiscordBot.Modules
         /// <param name="_server"></param>
         public RoleCommand(VirtualServer _server, LobbyGreet _lg) : base(_server, "role")
         {
-            WhitelistedRoles = PersistantList.Create(server, "WhitelistedRoles.txt");
+            WhitelistedRoles = PersistentList.Create(server, "WhitelistedRoles.txt");
             server.RoleUpdated += async (s,tup) => roleUpdated(tup.Item1,tup.Item2);
             server.RoleDeleted += async (s,r) => roleDeleted(r);
             // Get the strike channel to print admin alerts in

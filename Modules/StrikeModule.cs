@@ -1,5 +1,5 @@
 ﻿using Discord.WebSocket;
-using DiscordBot.Persistance;
+using DiscordBot.Persistence;
 using DiscordBot.Utility;
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,7 @@ namespace DiscordBot.Modules
     {
         #region Data Members
 
-        private PersistantDict<ulong, List<StrikeDetails>> _userStrikes;
+        private PersistentDict<ulong, List<StrikeDetails>> _userStrikes;
 
         private SocketTextChannel _strikeChannel;
 
@@ -31,7 +31,7 @@ namespace DiscordBot.Modules
 
         #region Properties
 
-        internal PersistantDict<ulong, List<StrikeDetails>> UserStrikes
+        internal PersistentDict<ulong, List<StrikeDetails>> UserStrikes
         {
             get
             {
@@ -67,7 +67,7 @@ namespace DiscordBot.Modules
         /// <param name="_server"></param>
         public StrikeModule(VirtualServer _server) : base(_server, "strike")
         {
-            UserStrikes = PersistantDict<ulong, List<StrikeDetails>>.load(_server, "UserStrikes.xml");
+            UserStrikes = PersistentDict<ulong, List<StrikeDetails>>.load(_server, "UserStrikes.xml");
 
             // Get the strike channel to print admin alerts in
             var res = server.FileSetup(_channelFile);

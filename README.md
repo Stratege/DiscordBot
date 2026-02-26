@@ -15,7 +15,7 @@ Whenever any **message** is **received** from the API it gets routed through the
 
 All **message sending** is routed through the VirtualServer object via server.safeSendMessage or server.safeSendEmbed, giving a central place to enforce security constraints.
 
-All **persistence** is handled via [Persistant Dictionaries](/PersistantDict.cs), [Persistant Lists](/PersistantList.cs) and [Persistant Values](/PersistantValue.cs), which in turn call the VirtualServers' XMLSerialization methods to ensure proper isolation of the environment.
+All **persistence** is handled via [Persistent Dictionaries](/Persistence/PersistentDict.cs), [Persistent Lists](/Persistence/PersistentList.cs) and [Persistent Values](/Persistence/PersistentValue.cs), which in turn call the VirtualServers' XMLSerialization methods to ensure proper isolation of the environment.
 
 
-As a result, new modules can be developed **quickly and securely**, without having to spend a lot of time thinking about security or persistance.
+As a result, new modules can be developed **quickly and securely**, without having to spend a lot of time thinking about security or persistence.

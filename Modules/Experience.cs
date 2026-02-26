@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using DiscordBot.Utility;
-using DiscordBot.Persistance;
+using DiscordBot.Persistence;
 
 namespace DiscordBot.Modules
 {
     class Experience : CommandHandler
     {
-        PersistantDict<ulong, int> uidToXP;
-        PersistantValue<int> charsForEvent;
-        PersistantValue<int> xpPerEvent;
+        PersistentDict<ulong, int> uidToXP;
+        PersistentValue<int> charsForEvent;
+        PersistentValue<int> xpPerEvent;
         Dictionary<ulong, int> overflowChars = new Dictionary<ulong, int>(); //not getting logged, but that's a-okay since that's never even an entire xp
 
         public static List<ulong> enabledServerIds = new List<ulong>() { 1338290337398915097, 857970340385783828 };
@@ -50,9 +50,9 @@ namespace DiscordBot.Modules
                 return;
             }
             Console.WriteLine("Experience initalizing for server "+_server.getServer().Name);
-            uidToXP = PersistantDict<ulong,int>.load(_server, "uidtoxp");
-            charsForEvent = PersistantValue<int>.load(_server, "charsForEvent");
-            xpPerEvent = PersistantValue<int>.load(_server, "xpPerEvent");
+            uidToXP = PersistentDict<ulong,int>.load(_server, "uidtoxp");
+            charsForEvent = PersistentValue<int>.load(_server, "charsForEvent");
+            xpPerEvent = PersistentValue<int>.load(_server, "xpPerEvent");
 
             Func<VirtualServer,Tuple<ServerMessage,string>,Task<bool>> f = async (s, t) =>
             {
