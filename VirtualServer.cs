@@ -118,6 +118,7 @@ namespace borkbot
                 addCommands(new Proxy(this).getCommands());
                 addCommands(new Scryfall(this).getCommands());
                 addCommands(new Experience(this).getCommands());
+                addCommands(new Wilderfeast(this).getCommands());
                 
                 var temp = new List<Command>();
                 Action<ServerMessage, string> h = (x, y) =>
