@@ -11,16 +11,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using System.IO;
-using System.Xml.Serialization;
-using System.Threading;
 using Discord;
 using Discord.Rest;
+using DiscordBot.Utility;
+using DiscordBot.Modules;
+using DiscordBot.Persistance;
 
-namespace borkbot
+namespace DiscordBot
 {
     public class ServerMessage
     {

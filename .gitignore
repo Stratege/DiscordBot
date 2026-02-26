@@ -1,3 +1,6 @@
 *
 !*.cs
 !.gitignore
+!/Modules/
+!/Persistance/
+!/Utility/

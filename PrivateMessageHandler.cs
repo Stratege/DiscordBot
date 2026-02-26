@@ -8,11 +8,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord.WebSocket;
+using DiscordBot.Utility;
 
-namespace borkbot
+namespace DiscordBot
 {
     class PrivateMessageHandler
     {
@@ -42,7 +42,7 @@ namespace borkbot
                     throw new Exception("oops no DC");
                 if (DC.CurrentUser == null)
                     throw new Exception("oops no CurrentUser");
-                if ((e.Channel.GetType() != typeof(SocketDMChannel)))
+                if (e.Channel.GetType() != typeof(SocketDMChannel))
                 {
                     Console.WriteLine("error in the code! Sending non-private messages to PMHandler!");
                     return;
@@ -130,7 +130,7 @@ namespace borkbot
             }
         }
 
-        private void safeSendPM(SocketDMChannel c, String m)
+        private void safeSendPM(SocketDMChannel c, string m)
         {
             try
             {
@@ -154,7 +154,7 @@ namespace borkbot
             else
             {
                 xs = s.Split(" ".ToCharArray(), 3, StringSplitOptions.RemoveEmptyEntries);
-                if (xs.Length == 3 && (xs[0] == DC.CurrentUser.Mention /*|| xs[0] == DC.CurrentUser.NicknameMention*/) && xs[1] == "selectServer")
+                if (xs.Length == 3 && xs[0] == DC.CurrentUser.Mention /*|| xs[0] == DC.CurrentUser.NicknameMention*/ && xs[1] == "selectServer")
                 {
                     server = xs[2];
                 }
