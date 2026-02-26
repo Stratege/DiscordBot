@@ -71,7 +71,7 @@ namespace borkbot
 
         public static bool validateMentionTarget(ServerMessage e, String m)
         {
-            var users = e.msg.MentionedUsers.Where(x => !x.IsBot).Select(x => Tuple.Create(x.Mention, x.Id, x)).ToList();
+            var users = e.msg.MentionedUsers().Where(x => !x.IsBot).Select(x => Tuple.Create(x.Mention, x.Id, x)).ToList();
             //turning this lax... let's hope it works
             //return (users.Count != 0 && m == users[0].Item1);
             return (users.Count != 0);

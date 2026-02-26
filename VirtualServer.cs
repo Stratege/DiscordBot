@@ -28,9 +28,9 @@ namespace borkbot
         public bool isDM;
         public bool isProxy;
         public ISocketMessageChannel Channel; //guild text channel or DM channel
-        public SocketUserMessage msg;
+        public IUserMessage msg;
         public SocketGuildUser Author;
-        public ServerMessage(SocketGuild _Server, bool _isDM, bool _isProxy, ISocketMessageChannel _Channel, SocketUserMessage _msg, SocketGuildUser _Author)
+        public ServerMessage(SocketGuild _Server, bool _isDM, bool _isProxy, ISocketMessageChannel _Channel, IUserMessage _msg, SocketGuildUser _Author)
         {   
             Server = _Server;
             isDM = _isDM;
@@ -38,6 +38,24 @@ namespace borkbot
             Channel = _Channel;
             msg = _msg;
             Author = _Author;
+        }
+    }
+
+    static class IUSerMessageExtensions
+    {
+        public static IReadOnlyCollection<IUser> MentionedUsers(this IUserMessage msg)
+        {
+            if(msg is SocketUserMessage sMsg)
+            {
+                return sMsg.MentionedUsers;
+            } else if(msg is RestUserMessage rMsg)
+            {
+                return rMsg.MentionedUsers;
+            } else
+            {
+                Console.WriteLine("UNDOCUMENTED DISCORD.NET API CHANGE: IUserMessage has a 3rd subtype added");
+                return [];
+            }
         }
     }
 
@@ -168,9 +186,9 @@ namespace borkbot
             });
         }
 
-        async Task adminAbstract(ServerMessage e, String m, Func<String, ulong, SocketUser, String> f)
+        async Task adminAbstract(ServerMessage e, String m, Func<String, ulong, IUser, String> f)
         {
-            var users = e.msg.MentionedUsers.Where(x => !x.IsBot).Select(x => Tuple.Create(x.Mention, x.Id, x)).ToList();
+            var users = e.msg.MentionedUsers().Where(x => !x.IsBot).Select(x => Tuple.Create(x.Mention, x.Id, x)).ToList();
             var message = "";
             if (!Funcs.validateMentionTarget(e, m))
                 message = "Unable to comply with command. \n\n"; //+ botInfo;
@@ -427,7 +445,7 @@ namespace borkbot
             var shouldContinue = await m(this, Tuple.Create(e,msgContent));
             if (!shouldContinue) return; //something has handled the msg in a way that says we should not handle it via command handler
 
-            if (!e.Author.IsWebhook && !e.Author.IsBot && (e.msg.MentionedUsers.Count(x => x.Id == DC.CurrentUser.Id) > 0 || (altCommand.isOn && msgContent.StartsWith(altCommand.alternativeSyntax))))
+            if (!e.Author.IsWebhook && !e.Author.IsBot && (e.msg.MentionedUsers().Count(x => x.Id == DC.CurrentUser.Id) > 0 || (altCommand.isOn && msgContent.StartsWith(altCommand.alternativeSyntax))))
             {
                 var res = parseMessage(msgContent);
                 if (res != null)

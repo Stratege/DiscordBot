@@ -471,8 +471,8 @@ namespace borkbot
             public static QueryPrimObj Roles(QueryPrimObj prim)
             {
                 IEnumerable<SocketRole> var = null;
-                if (prim.message != null)
-                    var = prim.message.MentionedRoles;
+                if (prim.message != null && prim.message is SocketMessage msg)
+                    var = msg.MentionedRoles;
                 if (prim.server != null)
                     var = prim.server.Roles;
                 if (prim.user != null)
@@ -482,7 +482,7 @@ namespace borkbot
                 return new QueryPrimObj(var.Select(x => package(x)));
             }
 
-            public static Func<QueryPrimObj, QueryPrimObj, QueryPrimObj> PrimObjBinOpHelper<J>(Func<Nullable<bool>, Nullable<bool>, J> f1, Func<BuiltInFuncObj, BuiltInFuncObj, J> f2, Func<SocketGuildChannel, SocketGuildChannel, J> f3, Func<FuncObj, FuncObj, J> f4, Func<Nullable<ulong>, Nullable<ulong>, J> f5, Func<IEnumerable<QueryPrimObj>, IEnumerable<QueryPrimObj>, J> f6, Func<SocketRole, SocketRole, J> f7, Func<SocketGuild, SocketGuild, J> f8, Func<String, String, J> f9, Func<Tuple<QueryPrimObj, QueryPrimObj>, Tuple<QueryPrimObj, QueryPrimObj>, J> f10, Func<SocketGuildUser, SocketGuildUser, J> f11, Func<SocketMessage, SocketMessage, J> f12)
+            public static Func<QueryPrimObj, QueryPrimObj, QueryPrimObj> PrimObjBinOpHelper<J>(Func<Nullable<bool>, Nullable<bool>, J> f1, Func<BuiltInFuncObj, BuiltInFuncObj, J> f2, Func<SocketGuildChannel, SocketGuildChannel, J> f3, Func<FuncObj, FuncObj, J> f4, Func<Nullable<ulong>, Nullable<ulong>, J> f5, Func<IEnumerable<QueryPrimObj>, IEnumerable<QueryPrimObj>, J> f6, Func<SocketRole, SocketRole, J> f7, Func<SocketGuild, SocketGuild, J> f8, Func<String, String, J> f9, Func<Tuple<QueryPrimObj, QueryPrimObj>, Tuple<QueryPrimObj, QueryPrimObj>, J> f10, Func<SocketGuildUser, SocketGuildUser, J> f11, Func<IMessage, IMessage, J> f12)
             {
                 return (x, y) =>
                 {
@@ -556,8 +556,8 @@ namespace borkbot
                 }
                 else if (x.role != null)
                     res = x.role.Members;
-                else if (x.message != null)
-                    res = (IEnumerable<SocketGuildUser>)x.message.MentionedUsers;
+                else if (x.message != null && x.message is SocketMessage msg)
+                    res = (IEnumerable<SocketGuildUser>)msg.MentionedUsers;
                 return res;
             }
 
@@ -615,9 +615,9 @@ namespace borkbot
                         return access;
                     });
                 }
-                else if (x.message != null)
+                else if (x.message != null && x.message is SocketMessage msg)
                 {
-                    res = x.message.MentionedChannels;
+                    res = msg.MentionedChannels;
                 }
                 return res;
             }
@@ -1284,7 +1284,7 @@ namespace borkbot
 
     class QueryPrimObj
     {
-        public SocketMessage message;
+        public IMessage message;
         public SocketGuild server;
         public SocketGuildChannel channel;
         public SocketGuildUser user;
@@ -1309,7 +1309,7 @@ namespace borkbot
         public QueryPrimObj(FuncObj _funcObj) { funcObj = _funcObj; }
         public QueryPrimObj(BuiltInFuncObj _builtInFuncObj) { builtInFuncObj = _builtInFuncObj; }
         public QueryPrimObj(Tuple<QueryPrimObj, QueryPrimObj> _tup) { tup = _tup; }
-        public QueryPrimObj(SocketMessage message) { this.message = message; }
+        public QueryPrimObj(IMessage message) { this.message = message; }
         public QueryPrimObj(ExprObj exprObj) { this.exprObj = exprObj; }
 
         public string show()

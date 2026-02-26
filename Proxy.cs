@@ -6,13 +6,15 @@
  * - RP proxies are not allowed outside of RP channels (use normal proxies for that)
  */
 
+using Discord;
 using Discord.Webhook;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
-using Discord.WebSocket;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace borkbot
@@ -230,11 +232,16 @@ namespace borkbot
             else
             {
                 ulong? tId = stc?.Id;
-                var mId = await chanIdToWebhook[settingsChannel.Id].SendMessageAsync(sendmsg, username: name, avatarUrl: x.image,threadId: tId, embeds: e.msg.Embeds);
+                var embeds = e.msg.Embeds is IReadOnlyCollection<Embed> ? (IReadOnlyCollection<Embed>)e.msg.Embeds : null;
+                if (embeds == null)
+                {
+                    Console.WriteLine("UNDOCUMENTED DISCORD.NET API CHANGE: msg.Embeds is not always an Embeds list anymore");
+                }
+                var mId = await chanIdToWebhook[settingsChannel.Id].SendMessageAsync(sendmsg, username: name, avatarUrl: x.image,threadId: tId, embeds: embeds);
                 if (triggerCommands)
                 {
                     var newMsg = await e.Channel.GetMessageAsync(mId);
-                    var eClone = new ServerMessage(e.Server, e.isDM, true, e.Channel, newMsg as Discord.WebSocket.SocketUserMessage, e.Author);
+                    var eClone = new ServerMessage(e.Server, e.isDM, true, e.Channel, newMsg as Discord.IUserMessage, e.Author);
                     await server.messageRecieved(eClone);
                 }
             }

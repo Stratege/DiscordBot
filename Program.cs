@@ -13,6 +13,7 @@ using Discord.WebSocket;
 using System.Xml.Serialization;
 using System.IO;
 using Discord.Net.Providers.WS4Net;
+using Discord;
 
 namespace borkbot
 {
@@ -60,30 +61,30 @@ namespace borkbot
 
             };
 
-            Func<SocketMessage,Task> msgReceivedHandling = async (SocketMessage msg) =>
+            Func<SocketMessage,Task> msgReceivedHandling = async (SocketMessage socketMsg) =>
                 {
                     try
                     {
                         //we ignore our own messages
-                        if (msg.Author.Id == DC.CurrentUser.Id)
+                        if (socketMsg.Author.Id == DC.CurrentUser.Id)
                             return;
-                        if (msg.GetType() == typeof(SocketUserMessage))
+                        if (socketMsg is SocketUserMessage msg)
                         {
                             if (msg.Channel.GetType() == typeof(SocketDMChannel))
                             {
                                 Console.WriteLine("Got private message by " + msg.Author.Username);
-                                await pmHandler.messageRecieved((SocketUserMessage)msg);
+                                await pmHandler.messageRecieved(msg);
                             }
                             else
                             {
                                 SocketTextChannel stc = (SocketTextChannel)msg.Channel;
-                                var convertedMsg = new ServerMessage(stc.Guild, false, false, stc, (SocketUserMessage)msg, stc.Guild.GetUser(msg.Author.Id));
+                                var convertedMsg = new ServerMessage(stc.Guild, false, false, stc, msg, stc.Guild.GetUser(msg.Author.Id));
                                 await servers[stc.Guild.Id].messageRecieved(convertedMsg);
                             }
                         }
                         else
                         {
-                            Console.WriteLine("Did not handle non-user msg: " + msg);
+                            Console.WriteLine("Did not handle non-user msg: " + socketMsg);
                         }
                     } catch (Exception e)
                     {
